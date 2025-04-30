@@ -1,0 +1,184 @@
+Detailed Analysis of the Agent Workflow
+Based on our code analysis and the debugging statements we've added, here's a comprehensive explanation of how the agent workflow functions:
+
+1. Overall Architecture
+The application uses a LangGraph-based workflow with multiple agents that process a user's question in a sequential manner. The workflow is defined in graph.py and consists of the following nodes:
+
+Planner Node: Analyzes the user's question and determines the query type and relevant tables/columns
+Selector Node: Selects the appropriate schemas and tables based on the planner's output
+SQLGenerator Node: Generates an SQL query based on the user's question and selected schemas
+Reviewer Node: Reviews the SQL query for correctness, security, and performance
+SQL Executor Node: Executes the SQL query against the database
+Router Node: Determines the next step based on the query results
+Final Report Node: Generates a comprehensive report based on the query results
+End Node: Finalizes the workflow and returns the results to the user
+2. Agent Types and Their Functions
+A. LLM-Based Agents
+These agents use Large Language Models (LLMs) to process input and generate output:
+
+PlannerAgent: Uses LLM to analyze the user's question and determine the query type, relevant tables, and columns.
+
+
+# In planner_node function
+planner = PlannerAgent(
+    model=st.session_state.get("llm_model"),
+    server=st.session_state.get("server"),
+    temperature=st.session_state.get("temperature", 0),
+    model_endpoint=st.session_state.get("server_endpoint")
+)
+plan = planner.invoke(user_question)
+
+SQLGenerator: Uses LLM to generate SQL queries based on the user's question.
+
+# In sql_generator_node function
+generator = SQLGenerator(
+    model=st.session_state.get("llm_model"),
+    server=st.session_state.get("server"),
+    temperature=st.session_state.get("temperature", 0),
+    model_endpoint=st.session_state.get("server_endpoint")
+)
+response = generator.invoke(user_question=user_question)
+
+ReviewerAgent: Uses LLM to review SQL queries for correctness, security, and performance.
+
+# In reviewer_node function
+reviewer = ReviewerAgent(
+    state=state,
+    model=st.session_state.get("llm_model"),
+    server=st.session_state.get("server"),
+    temperature=st.session_state.get("temperature", 0),
+    model_endpoint=st.session_state.get("server_endpoint")
+)
+review = reviewer.invoke(user_question, sql_query)
+
+RouterAgent: Uses LLM to determine the next step based on the query results.
+
+# In router_node function
+router = RouterAgent(
+    state=state,
+    model=state.model if hasattr(state, 'model') else st.session_state.get("llm_model"),
+    server=state.server if hasattr(state, 'server') else st.session_state.get("server"),
+    temperature=state.temperature if hasattr(state, 'temperature') else st.session_state.get("temperature", 0),
+    model_endpoint=state.model_endpoint if hasattr(state, 'model_endpoint') else st.session_state.get("server_endpoint")
+)
+decision = router.invoke(state)
+
+FinalReportAgent: Uses LLM to generate a comprehensive report based on the query results.
+
+# In final_report_node function
+final_report = FinalReportAgent(
+    state=state,
+    model=model,
+    server=server,
+    temperature=temperature,
+    model_endpoint=model_endpoint
+)
+report = final_report.invoke(sql_query_results, workflow_history)
+
+
+
+Non-LLM Agents
+These agents don't use LLMs and instead use hardcoded logic:
+
+SQL Executor: Directly executes SQL queries against the database without using LLM.
+
+# In sql_executor_node function
+from app import execute_sql_query
+query_results = execute_sql_query(sql_query)
+
+
+
+EndNodeAgent: Simply formats the final response without using LLM.
+
+# In end_node function
+end = EndNodeAgent()
+response = end.invoke(
+    user_question=state.user_question,
+    final_report_response=final_report_response
+)
+
+
+Optimization for Common Queries
+The system has optimizations for common queries like "list all tables" to bypass the LLM-based processing:
+
+# In sql_generator_node function
+if state.user_question.lower().strip() in ["list all tables", "show tables", "show all tables"]:
+    print("Detected 'list all tables' query, generating standard query WITHOUT using LLM")
+    standard_query = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_schema, table_name;"
+    # ...
+
+Data Flow Between Agents
+The data flows between agents through the state object, which is updated at each step:
+
+Planner → Selector: The planner's response is passed to the selector.
+
+# In planner_node function
+return {
+    "current_agent": "selector",
+    "execution_path": state.execution_path + ["planner"],
+    "planner_response": plan,
+    "planner_agent": planner
+}
+
+Selector → SQLGenerator: The selector's response is passed to the SQL generator.
+
+# In selector_node function
+return {
+    "current_agent": "SQLGenerator",
+    "execution_path": state.execution_path + ["selector"],
+    "selector_response": selector_response
+}
+
+SQLGenerator → Reviewer: The SQL query is passed to the reviewer.
+
+# In sql_generator_node function
+return {
+    "current_agent": "reviewer",
+    "execution_path": state.execution_path + ["SQLGenerator"],
+    "SQLGenerator_response": response,
+    "sql_query": sql_query,
+    # ...
+}
+
+Reviewer → SQL Executor: The reviewed SQL query is passed to the SQL executor.
+
+# In reviewer_node function
+return {
+    "current_agent": "sql_executor",
+    "execution_path": state.execution_path + ["reviewer"],
+    "reviewer_response": review,
+    # ...
+}
+
+SQL Executor → Router: The SQL query results are passed to the router.
+
+# In sql_executor_node function
+return {
+    "current_agent": "router",
+    "execution_path": state.execution_path + ["sql_executor"],
+    "sql_query_results": query_results,
+    "sql_query": sql_query,
+    # ...
+}
+
+Router → Final Report: The router's decision is passed to the final report generator.
+
+
+# In router_node function
+return {
+    "current_agent": route_to,
+    "execution_path": state.execution_path + ["router"],
+    "router_response": router_response
+}
+
+Final Report → End: The final report is passed to the end node.
+
+# In final_report_node function
+return {
+    "current_agent": "end",
+    "execution_path": state.execution_path + ["final_report"],
+    "final_report_response": report
+}
+
+
+

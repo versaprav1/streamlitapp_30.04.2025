@@ -1,0 +1,3 @@
+@echo off
+echo Starting SQL Research Agent...
+python run_app.py

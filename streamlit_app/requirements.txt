@@ -1,0 +1,11 @@
+streamlit
+langchain
+langgraph
+requests
+beautifulsoup4
+PyYAML
+pydantic
+google-generativeai
+openai
+streamlit-agraph
+termcolor

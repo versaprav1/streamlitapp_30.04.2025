@@ -1,0 +1,142 @@
+Your SQL agent is built using LangGraph, which implements a directed graph where:
+
+Nodes are the agents (Planner, Selector, SQLGenerator, etc.)
+Edges define the possible transitions between agents
+Here's a more detailed diagram showing the nodes and edges:
+
+                                 ┌─────────────────────────────────┐
+                                 │                                 │
+                                 ▼                                 │
+┌─────────┐     ┌──────────┐     ┌───────────────┐     ┌──────────┐     ┌──────────────┐
+│ Planner │────►│ Selector │────►│ SQLGenerator │────►│ Reviewer │────►│ SQL Executor │
+└─────────┘     └──────────┘     └───────────────┘     └──────────┘     └──────────────┘
+    ▲                ▲                   ▲                                      │
+    │                │                   │                                      │
+    │                │                   │                                      ▼
+    │                │                   │                                ┌──────────┐
+    │                │                   └────────────────────────────────│  Router  │
+    │                └──────────────────────────────────────────────────►└──────────┘
+    └───────────────────────────────────────────────────────────────────────┘│
+                                                                             │
+                                                                             ▼
+                    ┌─────┐     ┌─────────────┐
+                    │ End │◄────│ Final Report │◄────────────────────────────┘
+                    └─────┘     └─────────────┘
+
+Edge Types
+In your LangGraph implementation, there are two types of edges:
+
+Standard Edges: Direct connections between agents that always follow the same path:
+Planner → Selector
+Selector → SQLGenerator
+SQLGenerator → Reviewer
+Reviewer → SQL Executor
+SQL Executor → Router
+Final Report → End
+Conditional Edges: Edges from the Router that depend on the state of the workflow:
+Router → Planner (if the plan needs revision)
+Router → Selector (if different data sources need to be selected)
+Router → SQLGenerator (if the SQL query needs to be regenerated)
+Router → Final Report (if the workflow is ready to generate the final report)
+Conditional Routing Logic
+The Router agent uses a route_decision function to determine which path to take. This function examines the current state and makes a decision based on:
+
+Whether there are errors in the workflow
+Whether the SQL query was executed successfully
+Whether the query needs revision
+Whether additional information is needed
+From your code in agent_graph/graph.py, the routing logic is implemented as:
+
+Graph Compilation
+The graph is compiled using LangGraph's StateGraph class, which takes the  AgentGraphState as its state container:
+
+Graph Visualization
+Your application also creates a visualization of this graph in the sidebar using the streamlit_agraph library:
+
+def _create_graph_data(self):    nodes = [
+State Management
+The graph uses a shared state object ( AgentGraphState) to pass information between agents. This state includes:
+
+User question
+Agent responses (planner_response, selector_response, etc.)
+SQL query and results
+Execution path
+Error information
+Each agent can update this state, and the changes are passed to the next agent in the workflow.
+
+Potential Improvements to the Graph Structure
+If you want to improve the graph structure, you could consider:
+
+Adding More Conditional Edges: For example, allowing the Reviewer to route directly to the SQLGenerator if it finds issues with the query.
+Implementing Parallel Processing: For complex queries, you could have multiple SQLGenerator agents working in parallel on different parts of the query.
+Adding Error Recovery Paths: Creating specific paths for handling different types of errors, rather than just routing to the final report.
+Implementing a Feedback Loop: Adding a user feedback node that can influence the routing decisions.
+Adding Visualization of Current Path: Highlighting the current active node and path in the graph visualization to show users where they are in the workflow.
+
+┌─────────────────┐
+│                 │
+│  User Question  │
+│                 │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│                 │
+│  Planner Agent  │◄───────────────┐
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│ Selector Agent  │                │
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│ SQL Generator   │◄───────────────┐
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│ Reviewer Agent  │                │
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│  Router Agent   │────────────────┘
+│                 │
+└────────┬────────┘
+         │
+         │ (If SQL passes review)
+         │
+         ▼
+┌─────────────────┐
+│                 │
+│ Final Report    │
+│                 │
+└─────────────────┘
+
+
+Full component interaction:
+
+app.py initializes the workflow and builds the agent graph
+agent_graph/graph.py defines the graph structure and node behaviors
+states/state.py manages model settings and state
+models/*_models.py files use these settings for API calls
+agents/agents.py uses both state and model settings
+Looking at the state management:
+states/state.py defines get_model_settings()
+Agent class in agents/agents.py uses this function
+get_agent_graph() in graph.py also uses it
+Settings are stored in Streamlit's session state
+Examining model settings flow:
+Settings initialized in app.py's initialize_chat_workflow()
+Updated through sidebar in render_settings_sidebar()
+Used by various model classes (Groq, Claude, OpenAI, etc.)

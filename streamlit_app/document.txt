@@ -1,0 +1,67 @@
+┌─────────────────┐
+│                 │
+│  User Question  │
+│                 │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│                 │
+│  Planner Agent  │◄───────────────┐
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│ Selector Agent  │                │
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│ SQL Generator   │◄───────────────┐
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│ Reviewer Agent  │                │
+│                 │                │
+└────────┬────────┘                │
+         │                         │
+         ▼                         │
+┌─────────────────┐                │
+│                 │                │
+│  Router Agent   │────────────────┘
+│                 │
+└────────┬────────┘
+         │
+         │ (If SQL passes review)
+         │
+         ▼
+┌─────────────────┐
+│                 │
+│ Final Report    │
+│                 │
+└─────────────────┘
+
+
+Full component interaction:
+
+app.py initializes the workflow and builds the agent graph
+agent_graph/graph.py defines the graph structure and node behaviors
+states/state.py manages model settings and state
+models/*_models.py files use these settings for API calls
+agents/agents.py uses both state and model settings
+Looking at the state management:
+states/state.py defines get_model_settings()
+Agent class in agents/agents.py uses this function
+get_agent_graph() in graph.py also uses it
+Settings are stored in Streamlit's session state
+Examining model settings flow:
+Settings initialized in app.py's initialize_chat_workflow()
+Updated through sidebar in render_settings_sidebar()
+Used by various model classes (Groq, Claude, OpenAI, etc.)

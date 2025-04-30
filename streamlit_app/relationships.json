@@ -1,0 +1,1763 @@
+{
+    "tables": {
+      // Azure Tenant Management
+      "azure_tenants": {
+        "fields": {
+          "id": {
+            "type": "Primary Key",
+            "description": "Unique identifier for each tenant"
+          },
+          "data_source_id": {
+            "type": "Foreign Key",
+            "references": "data_sources.id",
+            "description": "Links each tenant to a data source"
+          }
+        }
+      },
+      // Azure Subscription Management
+      "azure_subscriptions": {
+        "fields": {
+          "id": {
+            "type": "Primary Key",
+            "description": "Unique identifier for each subscription"
+          },
+          "tenant_id": {
+            "type": "Foreign Key",
+            "references": "azure_tenants.id",
+            "description": "Links each subscription to a specific tenant"
+          }
+        }
+      },
+      // Data Source Configuration
+      "data_sources": {
+        "fields": {
+          "id": {
+            "type": "Primary Key",
+            "description": "Unique identifier for each data source"
+          },
+          "hostname": {
+            "type": "String",
+            "description": "Hostname of the data source"
+          },
+          "system_id": {
+            "type": "Foreign Key",
+            "description": "Potentially links to a broader system associated with the data source"
+          },
+          "proxy_id": {
+            "type": "Foreign Key",
+            "description": "Potentially links to a proxy service or intermediary layer"
+          }
+        }
+      }
+    },
+    // Relationship Definitions
+    "relationships": [
+      {
+        "from": "azure_tenants.data_source_id",
+        "to": "data_sources.id",
+        "type": "One-to-One",
+        "description": "Each tenant links to a specific data source"
+      },
+      {
+        "from": "azure_subscriptions.tenant_id",
+        "to": "azure_tenants.id",
+        "type": "Many-to-One",
+        "description": "Each subscription belongs to a single tenant"
+      }
+    ]
+  }
+  
+  {
+    "tables": {
+      // Logic App Components
+      "azure_logic_app_workflows": {
+        "fields": {
+          "id": "Primary Key",
+          "resource_group_id": {
+            "type": "Foreign Key",
+            "references": "azure_resource_groups.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // Resource Group Management
+      "azure_resource_groups": {
+        "fields": {
+          "id": "Primary Key",
+          "subscription_id": {
+            "type": "Foreign Key",
+            "references": "azure_subscriptions.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // Logic App Version Control
+      "azure_logic_app_workflow_versions": {
+        "fields": {
+          "id": "Primary Key",
+          "workflow_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_workflows.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // Integration Account Components
+      "azure_logic_app_integration_accounts": {
+        "fields": {
+          "id": "Primary Key",
+          "resource_group_id": {
+            "type": "Foreign Key",
+            "references": "azure_resource_groups.id"
+          }
+        }
+      },
+      // Integration Account Sessions
+      "azure_logic_app_integration_account_sessions": {
+        "fields": {
+          "id": "Primary Key",
+          "account_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_accounts.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // Integration Account Schemas
+      "azure_logic_app_integration_account_schemas": {
+        "fields": {
+          "id": "Primary Key",
+          "account_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_accounts.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // Integration Account Partners
+      "azure_logic_app_integration_account_partners": {
+        "fields": {
+          "id": "Primary Key",
+          "account_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_accounts.id"
+          }
+        }
+      },
+      // Partner Metadata
+      "azure_logic_app_integration_account_partner_metadata": {
+        "fields": {
+          "id": "Primary Key",
+          "partner_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_account_partners.id"
+          }
+        }
+      },
+      // Partner Identities
+      "azure_logic_app_integration_account_partner_identities": {
+        "fields": {
+          "id": "Primary Key",
+          "qualifier": "String",
+          "partner_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_account_partners.id"
+          }
+        }
+      },
+      // Integration Account Maps
+      "azure_logic_app_integration_account_maps": {
+        "fields": {
+          "id": "Primary Key",
+          "account_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_accounts.id"
+          }
+        }
+      },
+      // Integration Account Certificates
+      "azure_logic_app_integration_account_certificates": {
+        "fields": {
+          "id": "Primary Key",
+          "account_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_accounts.id"
+          }
+        }
+      },
+      // Integration Account Agreements
+      "azure_logic_app_integration_account_agreements": {
+        "fields": {
+          "id": "Primary Key",
+          "host_partner_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_account_partners.id"
+          },
+          "guest_partner_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_account_partners.id"
+          },
+          "account_id": {
+            "type": "Foreign Key",
+            "references": "azure_logic_app_integration_accounts.id"
+          }
+        }
+      },
+      // Standard Apps
+      "azure_standard_apps": {
+        "fields": {
+          "id": "Primary Key",
+          "resource_group_id": {
+            "type": "Foreign Key",
+            "references": "azure_resource_groups.id"
+          }
+        }
+      },
+      // Standard App Workflows
+      "azure_standard_app_workflows": {
+        "fields": {
+          "app_id": "Primary Key"
+        }
+      }
+    },
+    // Logic App Relationships
+    "relationships": [
+      {
+        "from": "azure_logic_app_workflows.resource_group_id",
+        "to": "azure_resource_groups.id",
+        "type": "One-to-One",
+        "description": "Links a workflow to a specific resource group"
+      },
+      {
+        "from": "azure_resource_groups.subscription_id",
+        "to": "azure_subscriptions.id",
+        "type": "Many-to-One",
+        "description": "Associates resource groups with subscriptions"
+      },
+      {
+        "from": "azure_logic_app_workflow_versions.workflow_id",
+        "to": "azure_logic_app_workflows.id",
+        "type": "Many-to-One",
+        "description": "Links versions to specific workflows"
+      },
+      {
+        "from": "azure_logic_app_integration_accounts.resource_group_id",
+        "to": "azure_resource_groups.id",
+        "type": "One-to-One",
+        "description": "Links integration accounts to resource groups"
+      },
+      {
+        "from": "azure_logic_app_integration_account_sessions.account_id",
+        "to": "azure_logic_app_integration_accounts.id",
+        "type": "Many-to-One",
+        "description": "Links sessions to integration accounts"
+      },
+      {
+        "from": "azure_logic_app_integration_account_schemas.account_id",
+        "to": "azure_logic_app_integration_accounts.id",
+        "type": "Many-to-One",
+        "description": "Links schemas to integration accounts"
+      },
+      {
+        "from": "azure_logic_app_integration_account_partners.account_id",
+        "to": "azure_logic_app_integration_accounts.id",
+        "type": "Many-to-One",
+        "description": "Links partners to integration accounts"
+      },
+      {
+        "from": "azure_logic_app_integration_account_partner_metadata.partner_id",
+        "to": "azure_logic_app_integration_account_partners.id",
+        "type": "Many-to-One",
+        "description": "Links partner metadata to specific partners"
+      },
+      {
+        "from": "azure_logic_app_integration_account_partner_identities.partner_id",
+        "to": "azure_logic_app_integration_account_partners.id",
+        "type": "Many-to-One",
+        "description": "Links partner identities to specific partners"
+      },
+      {
+        "from": "azure_logic_app_integration_account_maps.account_id",
+        "to": "azure_logic_app_integration_accounts.id",
+        "type": "Many-to-One",
+        "description": "Links maps to integration accounts"
+      },
+      {
+        "from": "azure_logic_app_integration_account_certificates.account_id",
+        "to": "azure_logic_app_integration_accounts.id",
+        "type": "Many-to-One",
+        "description": "Links certificates to integration accounts"
+      },
+      {
+        "from": "azure_logic_app_integration_account_agreements.account_id",
+        "to": "azure_logic_app_integration_accounts.id",
+        "type": "Many-to-One",
+        "description": "Links agreements to integration accounts"
+      },
+      {
+        "from": "azure_standard_apps.resource_group_id",
+        "to": "azure_resource_groups.id",
+        "type": "One-to-One",
+        "description": "Links standard apps to resource groups"
+      }
+    ]
+  }
+  
+  {
+    "tables": {
+      // API Management Services
+      "azure_api_management_services": {
+        "fields": {
+          "id": "Primary Key",
+          "resource_group_id": {
+            "type": "Foreign Key",
+            "references": "azure_resource_groups.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // API Management APIs
+      "azure_api_management_apis": {
+        "fields": {
+          "id": "Primary Key",
+          "create_time": "Timestamp",
+          "change_time": "Timestamp",
+          "name": "String",
+          "location": "String",
+          "service_url": "URL",
+          "service_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_services.id"
+          },
+          "resource_group_id": {
+            "type": "Foreign Key",
+            "references": "azure_resource_groups.id"
+          }
+        }
+      },
+      // Resource Groups
+      "azure_resource_groups": {
+        "fields": {
+          "id": "Primary Key",
+          "subscription_id": {
+            "type": "Foreign Key",
+            "references": "azure_subscriptions.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // API Revisions
+      "azure_api_management_api_revisions": {
+        "fields": {
+          "id": "Primary Key",
+          "api_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_apis.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // API Products
+      "azure_api_management_api_products": {
+        "fields": {
+          "azure_api_management_api_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_apis.id"
+          },
+          "azure_api_management_product_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_products.id"
+          }
+        }
+      },
+      // API Operations
+      "azure_api_management_api_operations": {
+        "fields": {
+          "id": "Primary Key",
+          "api": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_apis.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // API Products
+      "azure_api_management_products": {
+        "fields": {
+          "id": "Primary Key",
+          "service_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_services.id"
+          },
+          "resource_group_id": {
+            "type": "Foreign Key",
+            "references": "azure_resource_groups.id"
+          }
+        }
+      },
+      // API Operation Replies
+      "azure_api_management_api_operation_replies": {
+        "fields": {
+          "id": "Primary Key",
+          "operation_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_api_operations.id"
+          },
+          "data_source_id": "Foreign Key"
+        }
+      },
+      // API Operation Parameters
+      "azure_api_management_api_operation_parameters": {
+        "fields": {
+          "id": "Primary Key",
+          "operation_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_api_operations.id"
+          },
+          "response_id": {
+            "type": "Foreign Key",
+            "references": "azure_api_management_api_operation_replies.id"
+          },
+          "data_source_id_id": "Foreign Key"
+        }
+      }
+    },
+    // API Management Relationships
+    "relationships": [
+      {
+        "from": "azure_api_management_services.resource_group_id",
+        "to": "azure_resource_groups.id",
+        "type": "Many-to-One",
+        "description": "Links API management services to a specific resource group"
+      },
+      {
+        "from": "azure_api_management_apis.service_id",
+        "to": "azure_api_management_services.id",
+        "type": "Many-to-One",
+        "description": "Associates APIs with a management service"
+      },
+      {
+        "from": "azure_api_management_apis.resource_group_id",
+        "to": "azure_resource_groups.id",
+        "type": "Many-to-One",
+        "description": "Links APIs to a specific resource group"
+      },
+      {
+        "from": "azure_api_management_api_revisions.api_id",
+        "to": "azure_api_management_apis.id",
+        "type": "Many-to-One",
+        "description": "Links API revisions to specific APIs"
+      },
+      {
+        "from": "azure_api_management_api_products.azure_api_management_api_id",
+        "to": "azure_api_management_apis.id",
+        "type": "Many-to-One",
+        "description": "Associates products with specific APIs"
+      },
+      {
+        "from": "azure_api_management_api_products.azure_api_management_product_id",
+        "to": "azure_api_management_products.id",
+        "type": "Many-to-One",
+        "description": "Links API products to specific products"
+      },
+      {
+        "from": "azure_api_management_api_operations.api",
+        "to": "azure_api_management_apis.id",
+        "type": "Many-to-One",
+        "description": "Links API operations to specific APIs"
+      },
+      {
+        "from": "azure_api_management_products.resource_group_id",
+        "to": "azure_resource_groups.id",
+        "type": "Many-to-One",
+        "description": "Links products to specific resource groups"
+      },
+      {
+        "from": "azure_api_management_products.service_id",
+        "to": "azure_api_management_services.id",
+        "type": "Many-to-One",
+        "description": "Associates products with specific API management services"
+      },
+      {
+        "from": "azure_api_management_api_operation_replies.operation_id",
+        "to": "azure_api_management_api_operations.id",
+        "type": "Many-to-One",
+        "description": "Links operation replies to specific API operations"
+      },
+      {
+        "from": "azure_api_management_api_operation_parameters.operation_id",
+        "to": "azure_api_management_api_operations.id",
+        "type": "Many-to-One",
+        "description": "Links operation parameters to specific API operations"
+      },
+      {
+        "from": "azure_api_management_api_operation_parameters.response_id",
+        "to": "azure_api_management_api_operation_replies.id",
+        "type": "Many-to-One",
+        "description": "Links operation parameters to specific operation replies"
+      }
+    ]
+  }
+  
+  {
+    "services": {
+      "EventGrid": {  // Azure Event Grid service definition
+        "tables": {
+          // Event Grid Topics - stores information about Event Grid topics
+          "azure_event_grid_topics": {
+            "fields": {
+              "id": "Primary Key",
+              "resource_group_id": {
+                "type": "Foreign Key",
+                "references": "azure_resource_groups.id"  // Links to resource group
+              }
+            }
+          },
+          // Event Grid Domains - stores information about Event Grid domains
+          "azure_event_grid_domains": {
+            "fields": {
+              "id": "Primary Key",
+              "resource_group_id": {
+                "type": "Foreign Key", 
+                "references": "azure_resource_groups.id"  // Links to resource group
+              }
+            }
+          },
+          // Event Grid Partner Namespaces - stores partner namespace configurations
+          "azure_event_grid_partner_namespaces": {
+            "fields": {
+              "id": "Primary Key",
+              "resource_group_id": {
+                "type": "Foreign Key",
+                "references": "azure_resource_groups.id"  // Links to resource group
+              },
+              "data_source_id": "Foreign Key"  // Links to data source
+            }
+          },
+          // Event Grid Partner Topics - stores partner topic configurations
+          "azure_event_grid_partner_topics": {
+            "fields": {
+              "id": "Primary Key", 
+              "resource_group_id": {
+                "type": "Foreign Key",
+                "references": "azure_resource_groups.id"  // Links to resource group
+              }
+            }
+          },
+          // Event Grid Partner Registrations - stores partner registration info
+          "azure_event_grid_partner_registrations": {
+            "fields": {
+              "id": "Primary Key",
+              "resource_group_id": {
+                "type": "Foreign Key",
+                "references": "azure_resource_groups.id"  // Links to resource group
+              }
+            }
+          },
+          // Event Grid System Topics - stores system topic configurations
+          "azure_event_grid_system_topics": {
+            "fields": {
+              "id": "Primary Key",
+              "resource_group_id": {
+                "type": "Foreign Key",
+                "references": "azure_resource_groups.id"  // Links to resource group
+              }
+            }
+          },
+          // Event Grid Partner Namespace Channels - stores channel configurations
+          "azure_event_grid_partner_namespace_channels": {
+            "fields": {
+              "id": "Primary Key",
+              "namespace_id": {
+                "type": "Foreign Key",
+                "references": "azure_event_grid_partner_namespaces.id"  // Links to partner namespace
+              }
+            }
+          },
+          // Event Grid Event Subscriptions - stores subscription configurations
+          "azure_event_grid_event_subscriptions": {
+            "fields": {
+              "id": "Primary Key",
+              "azure_event_grid_domain_event_subscriptions": "Foreign Key",
+              "azure_event_grid_domain_topic_event_subscriptions": "Foreign Key",
+              "azure_event_grid_partner_topic_event_subscriptions": "Foreign Key",
+              "azure_event_grid_system_topic_event_subscriptions": "Foreign Key",
+              "azure_event_grid_topic_event_subscriptions": "Foreign Key",
+              "resource_group_id": {
+                "type": "Foreign Key",
+                "references": "azure_resource_groups.id"  // Links to resource group
+              }
+            }
+          },
+          // Event Grid Domain Topics - stores domain topic configurations
+          "azure_event_grid_domain_topics": {
+            "fields": {
+              "id": "Primary Key",
+              "domain_id": {
+                "type": "Foreign Key",
+                "references": "azure_event_grid_domains.id"  // Links to domain
+              }
+            }
+          }
+        },
+        // Relationships between Event Grid components
+        "relationships": [
+          // Various Many-to-One relationships linking Event Grid components
+          // to resource groups and other related components
+          {
+            "from": "azure_event_grid_topics.resource_group_id",
+            "to": "azure_resource_groups.id",
+            "type": "Many-to-One",
+            "description": "Links Event Grid topics to resource groups"
+          },
+          {
+            "from": "azure_event_grid_domains.resource_group_id",
+            "to": "azure_resource_groups.id",
+            "type": "Many-to-One", 
+            "description": "Links Event Grid domains to resource groups"
+          },
+          {
+            "from": "azure_event_grid_partner_namespaces.resource_group_id",
+            "to": "azure_resource_groups.id",
+            "type": "Many-to-One",
+            "description": "Links partner namespaces to resource groups"
+          },
+          {
+            "from": "azure_event_grid_partner_topics.resource_group_id",
+            "to": "azure_resource_groups.id",
+            "type": "Many-to-One",
+            "description": "Links partner topics to resource groups"
+          },
+          {
+            "from": "azure_event_grid_partner_namespace_channels.namespace_id",
+            "to": "azure_event_grid_partner_namespaces.id",
+            "type": "Many-to-One",
+            "description": "Links namespace channels to partner namespaces"
+          },
+          {
+            "from": "azure_event_grid_event_subscriptions.resource_group_id",
+            "to": "azure_resource_groups.id",
+            "type": "Many-to-One",
+            "description": "Links event subscriptions to resource groups"
+          },
+          {
+            "from": "azure_event_grid_domain_topics.domain_id",
+            "to": "azure_event_grid_domains.id",
+            "type": "Many-to-One",
+            "description": "Links domain topics to Event Grid domains"
+          }
+        ]
+      }
+    }
+  }
+  
+  {
+    "tables": [
+      {
+        "name": "azure_resource_groups",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "subscription_id", "type": "integer", "key": "Foreign Key", "references": { "table": "subscriptions", "field": "id" } },
+          { "name": "data_source_id", "type": "integer" }
+        ]
+      },
+      {
+        "name": "azure_service_bus_topics",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "resource_group_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_resource_groups", "field": "id" } },
+          { "name": "namespace_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_service_bus_namespaces", "field": "id" } }
+        ]
+      },
+      {
+        "name": "azure_service_bus_topic_subscriptions",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "topic_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_service_bus_topics", "field": "id" } }
+        ]
+      },
+      {
+        "name": "azure_event_grid_partner_namespaces",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "resource_group_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_resource_groups", "field": "id" } },
+          { "name": "data_source_id", "type": "integer" }
+        ]
+      },
+      {
+        "name": "azure_service_bus_queues",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "namespace_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_service_bus_namespaces", "field": "id" } },
+          { "name": "resource_group_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_resource_groups", "field": "id" } }
+        ]
+      },
+      {
+        "name": "azure_service_bus_topic_subscription_rules",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "subscription_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_service_bus_topic_subscriptions", "field": "id" } }
+        ]
+      },
+      {
+        "name": "azure_event_grid_partner_namespace_channels",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "namespace_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_event_grid_partner_namespaces", "field": "id" } }
+        ]
+      },
+      {
+        "name": "azure_service_bus_namespaces",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "resource_group_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_resource_groups", "field": "id" } }
+        ]
+      },
+      {
+        "name": "azure_service_bus_authorization_rules",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "namespace_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_service_bus_namespaces", "field": "id" } },
+          { "name": "queue_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_service_bus_queues", "field": "id" } },
+          { "name": "topic_id", "type": "integer", "key": "Foreign Key", "references": { "table": "azure_service_bus_topics", "field": "id" } }
+        ]
+      }
+    ]
+  }
+  {
+	"tables": [
+	  {
+		"name": "systems",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "data_sources",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "hostname", "type": "string" },
+		  { "name": "system_id", "type": "integer", "key": "Foreign Key", "references": { "table": "systems", "field": "id" } },
+		  { "name": "proxy_id", "type": "integer", "key": "Foreign Key", "references": { "table": "btp_api_management_proxies", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "btp_api_management_providers",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "btp_api_management_proxy_products",
+		"fields": [
+		  { "name": "btp_api_management_proxy_id", "type": "integer", "key": "Foreign Key", "references": { "table": "btp_api_management_proxies", "field": "id" } },
+		  { "name": "btp_api_management_product_id", "type": "integer", "key": "Foreign Key", "references": { "table": "btp_api_management_products", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "properties",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "data_flow_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_flows", "field": "id" } },
+		  { "name": "inventory_id", "type": "integer", "key": "Foreign Key", "references": { "table": "inventories", "field": "id" } },
+		  { "name": "type_id", "type": "integer", "key": "Foreign Key", "references": { "table": "property_types", "field": "id" } },
+		  { "name": "system_id", "type": "integer", "key": "Foreign Key", "references": { "table": "systems", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "property_types",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "name", "type": "string" }
+		]
+	  },
+	  {
+		"name": "metadata",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "inventory_id", "type": "integer", "key": "Foreign Key", "references": { "table": "inventories", "field": "id" } },
+		  { "name": "system_id", "type": "integer", "key": "Foreign Key", "references": { "table": "systems", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "inventories",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "object_id", "type": "string" },
+		  { "name": "object_url", "type": "string" },
+		  { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } },
+		  { "name": "sender_id", "type": "integer" },
+		  { "name": "receiver_id", "type": "integer" }
+		]
+	  },
+	  {
+		"name": "system_mappings",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "target_system:id", "type": "integer", "key": "Foreign Key", "references": { "table": "systems", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "data_flows",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "name", "type": "string" },
+		  { "name": "sender_id", "type": "integer" },
+		  { "name": "receiver_id", "type": "integer" }
+		]
+	  },
+	  {
+		"name": "btp_api_management_proxies",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "btp_api_management_products",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "btp_api_management_product_rate_plans",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "product_id", "type": "integer", "key": "Foreign Key", "references": { "table": "btp_api_management_products", "field": "id" } }
+		]
+	  },
+	  {
+		"name": "btp_api_management_product_applications",
+		"fields": [
+		  { "name": "id", "type": "integer", "key": "Primary Key" },
+		  { "name": "product_id", "type": "integer", "key": "Foreign Key", "references": { "table": "btp_api_management_products", "field": "id" } }
+		]
+	  }
+	]
+  }
+  {
+	"schema": {
+	  "tables": {
+		"systems": {
+		  "description": "Stores system information",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Unique identifier for the system"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Reference to the data source"
+			}
+		  }
+		},
+		"data_flows": {
+		  "description": "Manages data flow configurations",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Unique identifier for the data flow"
+			},
+			"name": {
+			  "type": "string",
+			  "description": "Name of the data flow"
+			},
+			"sender_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "System sending the data"
+			},
+			"receiver_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "System receiving the data"
+			}
+		  }
+		},
+		"inventories": {
+		  "description": "Inventory tracking system",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Unique identifier for inventory"
+			},
+			"object_id": {
+			  "type": "string",
+			  "description": "Object identifier"
+			},
+			"object_url": {
+			  "type": "string",
+			  "description": "URL reference to the object"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"
+			},
+			"sender_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Sending system"
+			},
+			"receiver_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Receiving system"
+			}
+		  }
+		},
+		"properties": {
+		  "description": "Property configurations",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Unique identifier for property"
+			},
+			"data_flow_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_flows",
+				"field": "id"
+			  },
+			  "description": "Associated data flow"
+			},
+			"inventory_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "inventories",
+				"field": "id"
+			  },
+			  "description": "Associated inventory"
+			},
+			"type_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "property_types",
+				"field": "id"
+			  },
+			  "description": "Type of property"
+			},
+			"system_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Associated system"
+			}
+		  }
+		},
+		"btp_event_mesh_queues": {
+		  "description": "BTP event mesh queue configurations",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Unique identifier for queue"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"
+			}
+		  }
+		},
+		"btp_event_mesh_topics": {
+		  "description": "BTP event mesh topic configurations",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Unique identifier for topic"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"
+			}
+		  }
+		}
+	  },
+	  "common_queries": {
+		"flow_between_systems": {
+		  "description": "Find data flows between specific systems",
+		  "tables": ["data_flows", "systems"],
+		  "joins": [
+			{
+			  "from": "data_flows.sender_id",
+			  "to": "systems.id"
+			},
+			{
+			  "from": "data_flows.receiver_id",
+			  "to": "systems.id"
+			}
+		  ]
+		},
+		"system_properties": {
+		  "description": "Get properties for a specific system",
+		  "tables": ["properties", "systems"],
+		  "joins": [
+			{
+			  "from": "properties.system_id",
+			  "to": "systems.id"
+			}
+		  ]
+		}
+	  }
+	}
+  }
+  {
+	"schema": {
+	  "tables": {
+		"systems": {
+		  "description": "Core system information",  // Stores fundamental system details
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "System identifier"  // Unique ID for each system
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"  // Links to data_sources table
+			}
+		  }
+		},
+		"data_sources": {
+		  "description": "Data source configuration",  // Configuration for data sources
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Data source identifier"  // Unique ID for each data source
+			},
+			"hostname": {
+			  "type": "string",
+			  "description": "Host name"  // Server hostname
+			},
+			"system_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Associated system"  // Links back to systems table
+			},
+			"proxy_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Proxy system reference"  // Links to proxy system
+			}
+		  }
+		},
+		"inventories": {
+		  "description": "Inventory tracking",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Inventory identifier"
+			},
+			"create_time": {
+			  "type": "timestamp",
+			  "description": "Creation timestamp"
+			},
+			"change_time": {
+			  "type": "timestamp",
+			  "description": "Last modification time"
+			},
+			"vendor": {
+			  "type": "string",
+			  "description": "Vendor information"
+			},
+			"type": {
+			  "type": "string",
+			  "description": "Inventory type"
+			},
+			"name": {
+			  "type": "string",
+			  "description": "Inventory name"
+			},
+			"description": {
+			  "type": "string",
+			  "description": "Description"
+			},
+			"object_id": {
+			  "type": "string",
+			  "description": "Object identifier"
+			},
+			"object_url": {
+			  "type": "string",
+			  "description": "Object URL"
+			},
+			"object_args": {
+			  "type": "string",
+			  "description": "Object arguments"
+			},
+			"sender_name": {
+			  "type": "string",
+			  "description": "Sender name"
+			},
+			"receiver_name": {
+			  "type": "string",
+			  "description": "Receiver name"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"
+			},
+			"sender_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Sender system"
+			},
+			"receiver_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Receiver system"
+			}
+		  }
+		},
+		"data_flows": {
+		  "description": "Data flow configuration",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Flow identifier"
+			},
+			"name": {
+			  "type": "string",
+			  "description": "Flow name"
+			},
+			"sender_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Sender system"
+			},
+			"receiver_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "systems",
+				"field": "id"
+			  },
+			  "description": "Receiver system"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"
+			}
+		  }
+		},
+		"btp_cloud_integration_messages": {
+		  "description": "BTP integration messages",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Message identifier"
+			},
+			"artefact": {
+			  "type": "string",
+			  "description": "Artefact information"
+			},
+			"correlation": {
+			  "type": "string",
+			  "description": "Correlation identifier"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"
+			}
+		  }
+		}
+	  },
+	  "common_queries": {
+		"flow_analysis": {
+		  "description": "Analyze data flows between systems",  // Query template for flow analysis
+		  "tables": ["data_flows", "systems"],
+		  "joins": [
+			{
+			  "from": "data_flows.sender_id",
+			  "to": "systems.id"
+			},
+			{
+			  "from": "data_flows.receiver_id",
+			  "to": "systems.id"
+			}
+		  ]
+		},
+		"message_tracking": {
+		  "description": "Track BTP integration messages",  // Query template for message tracking
+		  "tables": ["btp_cloud_integration_messages", "btp_cloud_integration_artefacts"],
+		  "joins": [
+			{
+			  "from": "btp_cloud_integration_messages.artefact",
+			  "to": "btp_cloud_integration_artefacts.id"
+			}
+		  ]
+		}
+	  }
+	}
+  }
+  {
+	"schema": {
+	  "tables": {
+		"systems": {
+		  "description": "Core systems information",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Unique system identifier"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Reference to data source"
+			}
+		  }
+		},
+		"btp_cloud_integration_packages": {
+		  "description": "Integration packages configuration",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Package identifier"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Associated data source"
+			}
+		  }
+		},
+		"btp_cloud_integration_artefacts": {
+		  "description": "Integration artefacts",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Artefact identifier"
+			},
+			"runtime_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "btp_cloud_integration_runtime_artefacts",
+				"field": "id"
+			  },
+			  "description": "Runtime reference"
+			},
+			"package_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "btp_cloud_integration_packages",
+				"field": "id"
+			  },
+			  "description": "Package reference"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Data source reference"
+			}
+		  }
+		},
+		"btp_cloud_integration_connections": {
+		  "description": "Integration connections",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Connection identifier"
+			},
+			"address": {
+			  "type": "string",
+			  "description": "Connection address"
+			},
+			"credential_name": {
+			  "type": "string",
+			  "description": "Name of credentials"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Data source reference"
+			},
+			"credential_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "btp_cloud_integration_credentials",
+				"field": "id"
+			  },
+			  "description": "Credential reference"
+			},
+			"participant_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "btp_cloud_integration_participants",
+				"field": "id"
+			  },
+			  "description": "Participant reference"
+			}
+		  }
+		},
+		"btp_cloud_integration_messages": {
+		  "description": "Integration messages",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Message identifier"
+			},
+			"correlation": {
+			  "type": "string",
+			  "description": "Message correlation"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Data source reference"
+			}
+		  }
+		},
+		"btp_tenants": {
+		  "description": "BTP tenant information",
+		  "fields": {
+			"id": {
+			  "type": "integer",
+			  "primary_key": true,
+			  "description": "Tenant identifier"
+			},
+			"product": {
+			  "type": "string",
+			  "description": "Product name"
+			},
+			"region": {
+			  "type": "string",
+			  "description": "Tenant region"
+			},
+			"data_source_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "data_sources",
+				"field": "id"
+			  },
+			  "description": "Data source reference"
+			},
+			"property_key_id": {
+			  "type": "integer",
+			  "foreign_key": {
+				"references": "property_types",
+				"field": "id"
+			  },
+			  "description": "Property key reference"
+			}
+		  }
+		}
+	  },
+	  "common_queries": {
+		"message_trace": {
+		  "description": "Trace message flow with properties and attachments",
+		  "tables": ["btp_cloud_integration_messages", "btp_cloud_integration_message_properties", "btp_cloud_integration_message_attachments"],
+		  "joins": [
+			{
+			  "from": "btp_cloud_integration_message_properties.message_id",
+			  "to": "btp_cloud_integration_messages.id"
+			},
+			{
+			  "from": "btp_cloud_integration_message_attachments.message_id",
+			  "to": "btp_cloud_integration_messages.id"
+			}
+		  ]
+		},
+		"connection_security": {
+		  "description": "View connection security details",
+		  "tables": ["btp_cloud_integration_connections", "btp_cloud_integration_credentials", "btp_cloud_integration_oauth2credentials"],
+		  "joins": [
+			{
+			  "from": "btp_cloud_integration_connections.credential_id",
+			  "to": "btp_cloud_integration_credentials.id"
+			},
+			{
+			  "from": "btp_cloud_integration_oauth2credentials.credential_id",
+			  "to": "btp_cloud_integration_credentials.id"
+			}
+		  ]
+		}
+	  }
+	}
+  }
+  {
+    "schema": {
+      "tables": {
+        "inventories": {
+          "description": "Core inventory information",
+          "fields": {
+            "id": {
+              "type": "integer",
+              "primary_key": true,
+              "description": "Unique inventory identifier"
+            },
+            "create_time": {
+              "type": "timestamp",
+              "description": "Creation timestamp"
+            },
+            "change_time": {
+              "type": "timestamp",
+              "description": "Last modification timestamp"
+            },
+            "vendor": {
+              "type": "string",
+              "description": "Vendor information"
+            },
+            "type": {
+              "type": "string",
+              "description": "Inventory type"
+            },
+            "name": {
+              "type": "string",
+              "description": "Inventory name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Inventory description"
+            },
+            "object_id": {
+              "type": "string",
+              "description": "Associated object identifier"
+            },
+            "object_url": {
+              "type": "string",
+              "description": "Object URL reference"
+            },
+            "object_args": {
+              "type": "string",
+              "description": "Object arguments"
+            },
+            "sender_name": {
+              "type": "string",
+              "description": "Sender system name"
+            },
+            "receiver_name": {
+              "type": "string",
+              "description": "Receiver system name"
+            },
+            "data_source_id": {
+              "type": "integer",
+              "foreign_key": {
+                "references": "data_sources",
+                "field": "id"
+              },
+              "description": "Associated data source"
+            },
+            "sender_id": {
+              "type": "integer",
+              "foreign_key": {
+                "references": "systems",
+                "field": "id"
+              },
+              "description": "Sender system reference"
+            },
+            "receiver_id": {
+              "type": "integer",
+              "foreign_key": {
+                "references": "systems",
+                "field": "id"
+              },
+              "description": "Receiver system reference"
+            }
+          }
+        },
+        "inventory_tags": {
+          "description": "Inventory tagging system",
+          "fields": {
+            "id": {
+              "type": "integer",
+              "primary_key": true,
+              "description": "Tag mapping identifier"
+            },
+            "inventory_id": {
+              "type": "integer",
+              "foreign_key": {
+                "references": "inventories",
+                "field": "id"
+              },
+              "description": "Referenced inventory"
+            },
+            "tag_value_id": {
+              "type": "integer",
+              "foreign_key": {
+                "references": "tag_values",
+                "field": "id"
+              },
+              "description": "Associated tag value"
+            }
+          }
+        },
+        "data_objects": {
+          "description": "Data object definitions",
+          "fields": {
+            "id": {
+              "type": "integer",
+              "primary_key": true,
+              "description": "Object identifier"
+            },
+            "name": {
+              "type": "string",
+              "description": "Object name"
+            },
+            "data_source_id": {
+              "type": "integer",
+              "foreign_key": {
+                "references": "data_sources",
+                "field": "id"
+              },
+              "description": "Associated data source"
+            }
+          }
+        },
+        "property_types": {
+          "description": "Property type definitions",
+          "fields": {
+            "id": {
+              "type": "integer",
+              "primary_key": true,
+              "description": "Property type identifier"
+            },
+            "kind": {
+              "type": "string",
+              "description": "Property kind"
+            },
+            "name": {
+              "type": "string",
+              "description": "Property type name"
+            }
+          }
+        }
+      },
+      "common_queries": {
+        "inventory_flow": {
+          "description": "Track inventory flow between systems",
+          "tables": ["inventories", "systems"],
+          "joins": [
+            {
+              "from": "inventories.sender_id",
+              "to": "systems.id"
+            },
+            {
+              "from": "inventories.receiver_id",
+              "to": "systems.id"
+            }
+          ]
+        },
+        "tagged_inventories": {
+          "description": "Find inventories by tags",
+          "tables": ["inventories", "inventory_tags", "tag_values", "tags"],
+          "joins": [
+            {
+              "from": "inventory_tags.inventory_id",
+              "to": "inventories.id"
+            },
+            {
+              "from": "inventory_tags.tag_value_id",
+              "to": "tag_values.id"
+            },
+            {
+              "from": "tag_values.tag_id",
+              "to": "tags.id"
+            }
+          ]
+        },
+        "inventory_objects": {
+          "description": "Get objects associated with inventory",
+          "tables": ["inventories", "inventory_objects", "data_objects"],
+          "joins": [
+            {
+              "from": "inventory_objects.inventory_id",
+              "to": "inventories.id"
+            },
+            {
+              "from": "inventory_objects.data_object_id",
+              "to": "data_objects.id"
+            }
+          ]
+        }
+      },
+      "query_patterns": {
+        "time_based_queries": {
+          "description": "Queries involving creation and modification times",
+          "sample_fields": ["create_time", "change_time"]
+        },
+        "system_flow_analysis": {
+          "description": "Analyze data flow between systems",
+          "relevant_fields": ["sender_id", "receiver_id", "sender_name", "receiver_name"]
+        }
+      }
+    }
+  }
+  {
+    "tables": [
+      {
+        "name": "systems",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+        ]
+      },
+      {
+        "name": "data_sources",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "hostname", "type": "string" },
+          { "name": "system_id", "type": "integer", "key": "Foreign Key", "references": { "table": "systems", "field": "id" } },
+          { "name": "proxy_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_source_proxies", "field": "id" } }
+        ]
+      },
+      {
+        "name": "data_source_proxies",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "url", "type": "string" },
+          { "name": "authentication", "type": "string" }
+        ]
+      },
+      {
+        "name": "data_source_proxy_headers",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "proxy_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_source_proxies", "field": "id" } }
+        ]
+      },
+      {
+        "name": "data_source_oauth2credentials",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } },
+          { "name": "proxy_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_source_proxies", "field": "id" } }
+        ]
+      },
+      {
+        "name": "data_source_basic_auth_credentials",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } },
+          { "name": "proxy_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_source_proxies", "field": "id" } }
+        ]
+      },
+      {
+        "name": "data_source_api_keys",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+        ]
+      },
+      {
+        "name": "data_source_access_tokens",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+        ]
+      },
+      {
+        "name": "btp_tenants",
+        "fields": [
+          { "name": "id", "type": "integer", "key": "Primary Key" },
+          { "name": "product", "type": "string" },
+          { "name": "region", "type": "string" },
+          { "name": "data_source_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } },
+          { "name": "property_key_id", "type": "integer", "key": "Foreign Key", "references": { "table": "data_sources", "field": "id" } }
+        ]
+      }
+    ]
+  }
+  {
+    "dev": {
+        "interfaces": {
+            "related_tables": ["ip_addresses"],
+            "relationships": [
+                {
+                    "table": "ip_addresses",
+                    "type": "one_to_many",
+                    "join_condition": "interfaces.id = ip_addresses.interface_id"
+                }
+            ]
+        }
+    }
+}
