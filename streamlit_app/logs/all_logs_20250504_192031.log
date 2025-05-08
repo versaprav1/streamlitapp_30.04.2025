@@ -1,0 +1,1479 @@
+2025-05-04 21:06:27,072 - INFO - QUERY START: list all interfaces
+2025-05-04 21:06:27,077 - INFO - QUERY ID: 1746385587-129464
+2025-05-04 21:06:27,088 - INFO - START TIME: 2025-05-04 21:06:27.025720
+2025-05-04 21:06:27,104 - INFO - Starting workflow execution for: 'list all interfaces'
+2025-05-04 21:06:27,119 - INFO - Initial state validated successfully
+2025-05-04 21:06:27,142 - INFO - Using recursion limit: 40
+2025-05-04 21:06:27,157 - INFO - Starting workflow stream
+2025-05-04 21:06:27,171 - DEBUG - STDOUT: 
+==== PLANNER NODE START ====
+2025-05-04 21:06:27,189 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:27,223 - DEBUG - STDOUT: Current execution path: []
+2025-05-04 21:06:27,243 - DEBUG - STDOUT: Processing user question: 'list all interfaces'
+2025-05-04 21:06:27,324 - DEBUG - STDOUT: Successfully initialized database metadata store and discovery service
+2025-05-04 21:06:27,338 - DEBUG - STDOUT: Successfully initialized PlannerAgent with database capabilities using model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:27,356 - DEBUG - STDOUT: PlannerAgent is using LLM to analyze the query and determine the appropriate database tables and columns
+2025-05-04 21:06:27,374 - DEBUG - STDOUT: Invoking PlannerAgent with question: 'list all interfaces'
+2025-05-04 21:06:27,453 - DEBUG - STDOUT: Invoking Planner with question: list all interfaces...
+2025-05-04 21:06:29,650 - DEBUG - STDOUT: Raw Planner response: {
+    "query_type": "sql",
+    "primary_table_or_datasource": "unknown",
+    "relevant_columns": ["interface_name", "interface_id", "description"],
+    "filtering_conditions": "none",
+    "processing_instructions": "Discover the database schema to identify which table contains interface information, then list all records from that table"
+}
+2025-05-04 21:06:29,658 - DEBUG - STDOUT: PlannerAgent returned plan: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [
+    "interface_name",
+    "interface_id",
+    "description"
+  ],
+  "filtering_conditions": "none",
+  "processing_instructions": "Discover the database schema to identify which table contains interface information, then list all records from that table",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:29.657803",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:29,673 - DEBUG - STDOUT: Planner node output: current_agent=selector
+2025-05-04 21:06:29,680 - DEBUG - STDOUT: Planner response being sent to selector: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [
+    "interface_name",
+    "interface_id",
+    "description"
+  ],
+  "filtering_conditions": "none",
+  "processing_instructions": "Discover the database schema to identify which table contains interface information, then list all records from that table",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:29.657803",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:29,691 - DEBUG - STDOUT: ==== PLANNER NODE END ====
+2025-05-04 21:06:29,699 - INFO - Processing agent: planner
+2025-05-04 21:06:29,702 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:29,705 - DEBUG - Event keys: dict_keys(['planner'])
+2025-05-04 21:06:29,713 - DEBUG - Execution path: ['planner']
+2025-05-04 21:06:29,719 - DEBUG - planner response: {'query_type': 'sql', 'primary_table_or_datasource': 'unknown', 'relevant_columns': ['interface_name', 'interface_id', 'description'], 'filtering_conditions': 'none', 'processing_instructions': 'Discover the database schema to identify which table contains interface information, then list all records from that table', 'validated': True, 'timestamp': '2025-05-04 21:06:29.657803', 'agent': 'planner', 'user_question': 'list all interfaces'}
+2025-05-04 21:06:29,732 - DEBUG - STDOUT: 
+==== SELECTOR NODE START ====
+2025-05-04 21:06:29,736 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:29,739 - DEBUG - STDOUT: Current execution path: ['planner']
+2025-05-04 21:06:29,751 - DEBUG - STDOUT: Planner response received: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [
+    "interface_name",
+    "interface_id",
+    "description"
+  ],
+  "filtering_conditions": "none",
+  "processing_instructions": "Discover the database schema to identify which table contains interface information, then list all records from that table",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:29.657803",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:29,766 - DEBUG - STDOUT: Selector is processing planner response for question: 'list all interfaces'
+2025-05-04 21:06:29,769 - DEBUG - STDOUT: NOTE: The selector node is currently simplified and doesn't use LLM.
+2025-05-04 21:06:29,770 - DEBUG - STDOUT: It simply passes through to the SQLGenerator without making actual selections.
+2025-05-04 21:06:29,773 - DEBUG - STDOUT: Selector node output: current_agent=SQLGenerator
+2025-05-04 21:06:29,787 - DEBUG - STDOUT: Selector response being sent to SQLGenerator: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [
+      "interface_name",
+      "interface_id",
+      "description"
+    ],
+    "filters": "none"
+  }
+}
+2025-05-04 21:06:29,801 - DEBUG - STDOUT: ==== SELECTOR NODE END ====
+2025-05-04 21:06:29,816 - INFO - Processing agent: selector
+2025-05-04 21:06:29,819 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:29,820 - DEBUG - Event keys: dict_keys(['selector'])
+2025-05-04 21:06:29,822 - DEBUG - Execution path: ['planner', 'selector']
+2025-05-04 21:06:29,833 - DEBUG - selector response: {'raw': 'Selection completed', 'selected_schemas': {}, 'selected_tool': 'sql_query', 'selected_datasource': 'unknown', 'information_needed': 'Table listing', 'reason_for_selection': 'Direct database query is the most efficient way to list tables', 'query_parameters': {'columns': ['interface_name', 'interface_id', 'description'], 'filters': 'none'}}
+2025-05-04 21:06:29,849 - DEBUG - STDOUT: 
+==== SQL GENERATOR NODE START ====
+2025-05-04 21:06:29,853 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:29,867 - DEBUG - STDOUT: Current execution path: ['planner', 'selector']
+2025-05-04 21:06:29,872 - DEBUG - STDOUT: Selector response received: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [
+      "interface_name",
+      "interface_id",
+      "description"
+    ],
+    "filters": "none"
+  }
+}
+2025-05-04 21:06:29,901 - DEBUG - STDOUT: Non-standard query detected, using LLM-based SQLGenerator
+2025-05-04 21:06:29,907 - DEBUG - STDOUT: Created SQLGenerator with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:29,921 - DEBUG - STDOUT: Invoking SQLGenerator with user_question: 'list all interfaces'
+2025-05-04 21:06:34,665 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:34,733 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:34,736 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:34,744 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:34,747 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:34,752 - DEBUG - STDOUT: SQLGenerator returned response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:34,762 - DEBUG - STDOUT: Found sql_query in sql_generator_response:
+2025-05-04 21:06:34,765 - DEBUG - STDOUT: SQL query was not generated. Retrying with more explicit instructions.
+2025-05-04 21:06:34,769 - DEBUG - STDOUT: Retrying with explicit prompt: 
+            I need a SQL query to answer this question: "list all interfaces"
+
+            If this is asking to list tables, use:
+            SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+
+            If this is asking about specific table contents, use:
+            SELECT * FROM [table_name] LIMIT 10;
+
+            Please generate ONLY the SQL query without any explanation.
+2025-05-04 21:06:36,600 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:36,631 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:36,633 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:36,644 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:36,648 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:36,652 - DEBUG - STDOUT: Second attempt response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:36,663 - DEBUG - STDOUT: Second attempt generated SQL query:
+2025-05-04 21:06:36,666 - DEBUG - STDOUT: WARNING: Failed to generate SQL query after multiple attempts
+2025-05-04 21:06:36,676 - DEBUG - STDOUT: Final SQL query set in response:
+2025-05-04 21:06:36,679 - DEBUG - STDOUT: SQL Generator node output: current_agent=reviewer
+2025-05-04 21:06:36,683 - DEBUG - STDOUT: SQL query generated:
+2025-05-04 21:06:36,689 - DEBUG - STDOUT: SQL Generator response being sent to reviewer: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:36,700 - DEBUG - STDOUT: ==== SQL GENERATOR NODE END ====
+2025-05-04 21:06:36,711 - INFO - Processing agent: SQLGenerator
+2025-05-04 21:06:36,714 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:36,717 - DEBUG - Event keys: dict_keys(['SQLGenerator'])
+2025-05-04 21:06:36,717 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:36,728 - DEBUG - SQLGenerator response: {'sql_generator_response': {'sql_query': '', 'explanation': "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']", 'validation_checks': ['Query generation failed'], 'query_type': 'ERROR', 'estimated_complexity': 'UNKNOWN', 'required_indexes': []}, 'sql_query': ''}
+2025-05-04 21:06:36,748 - DEBUG - STDOUT: 
+==== REVIEWER NODE START ====
+2025-05-04 21:06:36,750 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:36,761 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:36,767 - DEBUG - STDOUT: SQL query to review:
+2025-05-04 21:06:36,776 - DEBUG - STDOUT: SQLGenerator response received: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:36,795 - DEBUG - STDOUT: Reviewer is analyzing SQL query for question: 'list all interfaces'
+2025-05-04 21:06:36,798 - DEBUG - STDOUT: Using LLM-based ReviewerAgent to analyze the SQL query
+2025-05-04 21:06:36,801 - DEBUG - STDOUT: Created ReviewerAgent with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:36,810 - DEBUG - STDOUT: Invoking ReviewerAgent with user_question: 'list all interfaces' and sql_query: ''
+2025-05-04 21:06:36,813 - DEBUG - STDOUT: ReviewerAgent returned review: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:36.813696",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:36,833 - DEBUG - STDOUT: Reviewer node output: current_agent=sql_executor
+2025-05-04 21:06:36,848 - DEBUG - STDOUT: Reviewer response being sent to sql_executor: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:36.813696",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:36,862 - DEBUG - STDOUT: ==== REVIEWER NODE END ====
+2025-05-04 21:06:36,867 - INFO - Processing agent: reviewer
+2025-05-04 21:06:36,880 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:36,882 - DEBUG - Event keys: dict_keys(['reviewer'])
+2025-05-04 21:06:36,884 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:36,898 - DEBUG - reviewer response: {'reviewer_response': {'is_correct': False, 'issues': ['Empty SQL query provided'], 'suggestions': ['Fix the identified issues before proceeding'], 'explanation': 'Review failed due to critical issues', 'security_concerns': [], 'performance_impact': 'HIGH', 'confidence_score': 1.0, 'metadata': {'reviewed_at': '2025-05-04T21:06:36.813696', 'review_status': 'ERROR', 'review_version': '1.0'}}}
+2025-05-04 21:06:36,912 - DEBUG - STDOUT: 
+==== SQL EXECUTOR NODE START ====
+2025-05-04 21:06:36,915 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:36,932 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:36,943 - DEBUG - STDOUT: SQL query to execute:
+2025-05-04 21:06:36,948 - DEBUG - STDOUT: Reviewer response received: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:36.813696",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:36,965 - DEBUG - STDOUT: SQL Executor is processing SQL query: ''
+2025-05-04 21:06:36,977 - DEBUG - STDOUT: ERROR: SQL query is empty. Cannot execute empty query.
+2025-05-04 21:06:36,981 - DEBUG - STDOUT: SQL Executor node error output (empty query): {
+  "current_agent": "router",
+  "errors": {
+    "sql_executor": "Empty SQL query provided"
+  },
+  "execution_path": [
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error"
+  ],
+  "is_error_state": true,
+  "sql_query_results": {
+    "status": "error",
+    "error_message": "Empty SQL query provided. The SQL Generator failed to create a valid query.",
+    "column_names": [
+      "Error"
+    ],
+    "rows": [
+      [
+        "Empty SQL query provided"
+      ]
+    ],
+    "row_count": 1,
+    "execution_time": 0,
+    "query": ""
+  },
+  "model": "chatgpt-4o-latest",
+  "server": "openai",
+  "temperature": 0.0,
+  "model_endpoint": "https://api.openai.com/v1"
+}
+2025-05-04 21:06:37,011 - DEBUG - STDOUT: ==== SQL EXECUTOR NODE END (WITH ERROR) ====
+2025-05-04 21:06:37,015 - INFO - Processing agent: sql_executor
+2025-05-04 21:06:37,027 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:37,030 - DEBUG - Event keys: dict_keys(['sql_executor'])
+2025-05-04 21:06:37,033 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:37,062 - DEBUG - STDOUT: 
+==== ROUTER NODE START ====
+2025-05-04 21:06:37,078 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:37,083 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:37,099 - DEBUG - STDOUT: RouterAgent returned decision: {
+  "router_response": {
+    "route_to": "planner",
+    "reason": "Starting new workflow",
+    "feedback": "Initializing workflow with planner",
+    "state_updates": {
+      "workflow_started": true,
+      "start_time": "2025-05-04T21:06:37.099305"
+    },
+    "confidence_score": 1.0,
+    "requires_human_input": false
+  }
+}
+2025-05-04 21:06:37,125 - DEBUG - STDOUT: Route decision: planner
+2025-05-04 21:06:37,130 - DEBUG - STDOUT: Router node output: current_agent=planner
+2025-05-04 21:06:37,143 - DEBUG - STDOUT: Router response: {
+  "route_to": "planner",
+  "reason": "Starting new workflow",
+  "feedback": "Initializing workflow with planner",
+  "state_updates": {
+    "workflow_started": true,
+    "start_time": "2025-05-04T21:06:37.099305"
+  },
+  "confidence_score": 1.0,
+  "requires_human_input": false
+}
+2025-05-04 21:06:37,160 - DEBUG - STDOUT: ==== ROUTER NODE END ====
+2025-05-04 21:06:37,167 - DEBUG - STDOUT: ROUTE DECISION: planner -> to_planner
+2025-05-04 21:06:37,181 - INFO - Processing agent: router
+2025-05-04 21:06:37,193 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:37,199 - DEBUG - Event keys: dict_keys(['router'])
+2025-05-04 21:06:37,212 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:37,217 - DEBUG - router response: {'route_to': 'planner', 'reason': 'Starting new workflow', 'feedback': 'Initializing workflow with planner', 'state_updates': {'workflow_started': True, 'start_time': '2025-05-04T21:06:37.099305'}, 'confidence_score': 1.0, 'requires_human_input': False}
+2025-05-04 21:06:37,242 - DEBUG - STDOUT: 
+==== PLANNER NODE START ====
+2025-05-04 21:06:37,261 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:37,266 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:37,279 - DEBUG - STDOUT: Processing user question: 'list all interfaces'
+2025-05-04 21:06:37,334 - DEBUG - STDOUT: Successfully initialized database metadata store and discovery service
+2025-05-04 21:06:37,349 - DEBUG - STDOUT: Successfully initialized PlannerAgent with database capabilities using model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:37,374 - DEBUG - STDOUT: PlannerAgent is using LLM to analyze the query and determine the appropriate database tables and columns
+2025-05-04 21:06:37,383 - DEBUG - STDOUT: Invoking PlannerAgent with question: 'list all interfaces'
+2025-05-04 21:06:37,394 - DEBUG - STDOUT: Invoking Planner with question: list all interfaces...
+2025-05-04 21:06:38,112 - DEBUG - STDOUT: Raw Planner response: {
+    "query_type": "sql",
+    "primary_table_or_datasource": "unknown",
+    "relevant_columns": [],
+    "filtering_conditions": "",
+    "processing_instructions": "Discover the database structure to identify which table(s) contain interface information. Then list all entries representing interfaces."
+}
+2025-05-04 21:06:38,123 - DEBUG - STDOUT: PlannerAgent returned plan: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [],
+  "filtering_conditions": "",
+  "processing_instructions": "Discover the database structure to identify which table(s) contain interface information. Then list all entries representing interfaces.",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:38.123889",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:38,132 - DEBUG - STDOUT: Planner node output: current_agent=selector
+2025-05-04 21:06:38,141 - DEBUG - STDOUT: Planner response being sent to selector: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [],
+  "filtering_conditions": "",
+  "processing_instructions": "Discover the database structure to identify which table(s) contain interface information. Then list all entries representing interfaces.",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:38.123889",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:38,150 - DEBUG - STDOUT: ==== PLANNER NODE END ====
+2025-05-04 21:06:38,157 - INFO - Processing agent: planner
+2025-05-04 21:06:38,160 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:38,162 - DEBUG - Event keys: dict_keys(['planner'])
+2025-05-04 21:06:38,165 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner']
+2025-05-04 21:06:38,173 - DEBUG - planner response: {'query_type': 'sql', 'primary_table_or_datasource': 'unknown', 'relevant_columns': [], 'filtering_conditions': '', 'processing_instructions': 'Discover the database structure to identify which table(s) contain interface information. Then list all entries representing interfaces.', 'validated': True, 'timestamp': '2025-05-04 21:06:38.123889', 'agent': 'planner', 'user_question': 'list all interfaces'}
+2025-05-04 21:06:38,179 - DEBUG - STDOUT: 
+==== SELECTOR NODE START ====
+2025-05-04 21:06:38,192 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:38,195 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner']
+2025-05-04 21:06:38,200 - DEBUG - STDOUT: Planner response received: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [],
+  "filtering_conditions": "",
+  "processing_instructions": "Discover the database structure to identify which table(s) contain interface information. Then list all entries representing interfaces.",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:38.123889",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:38,229 - DEBUG - STDOUT: Selector is processing planner response for question: 'list all interfaces'
+2025-05-04 21:06:38,233 - DEBUG - STDOUT: NOTE: The selector node is currently simplified and doesn't use LLM.
+2025-05-04 21:06:38,247 - DEBUG - STDOUT: It simply passes through to the SQLGenerator without making actual selections.
+2025-05-04 21:06:38,250 - DEBUG - STDOUT: Selector node output: current_agent=SQLGenerator
+2025-05-04 21:06:38,260 - DEBUG - STDOUT: Selector response being sent to SQLGenerator: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [],
+    "filters": ""
+  }
+}
+2025-05-04 21:06:38,266 - DEBUG - STDOUT: ==== SELECTOR NODE END ====
+2025-05-04 21:06:38,279 - INFO - Processing agent: selector
+2025-05-04 21:06:38,282 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:38,296 - DEBUG - Event keys: dict_keys(['selector'])
+2025-05-04 21:06:38,310 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector']
+2025-05-04 21:06:38,312 - DEBUG - selector response: {'raw': 'Selection completed', 'selected_schemas': {}, 'selected_tool': 'sql_query', 'selected_datasource': 'unknown', 'information_needed': 'Table listing', 'reason_for_selection': 'Direct database query is the most efficient way to list tables', 'query_parameters': {'columns': [], 'filters': ''}}
+2025-05-04 21:06:38,315 - DEBUG - STDOUT: 
+==== SQL GENERATOR NODE START ====
+2025-05-04 21:06:38,330 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:38,347 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector']
+2025-05-04 21:06:38,363 - DEBUG - STDOUT: Selector response received: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [],
+    "filters": ""
+  }
+}
+2025-05-04 21:06:38,378 - DEBUG - STDOUT: Non-standard query detected, using LLM-based SQLGenerator
+2025-05-04 21:06:38,383 - DEBUG - STDOUT: Created SQLGenerator with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:38,396 - DEBUG - STDOUT: Invoking SQLGenerator with user_question: 'list all interfaces'
+2025-05-04 21:06:40,828 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:40,854 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:40,858 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:40,862 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:40,872 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:40,877 - DEBUG - STDOUT: SQLGenerator returned response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:40,886 - DEBUG - STDOUT: Found sql_query in sql_generator_response:
+2025-05-04 21:06:40,890 - DEBUG - STDOUT: SQL query was not generated. Retrying with more explicit instructions.
+2025-05-04 21:06:40,894 - DEBUG - STDOUT: Retrying with explicit prompt: 
+            I need a SQL query to answer this question: "list all interfaces"
+
+            If this is asking to list tables, use:
+            SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+
+            If this is asking about specific table contents, use:
+            SELECT * FROM [table_name] LIMIT 10;
+
+            Please generate ONLY the SQL query without any explanation.
+2025-05-04 21:06:43,108 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:43,139 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:43,143 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:43,151 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:43,156 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:43,160 - DEBUG - STDOUT: Second attempt response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:43,173 - DEBUG - STDOUT: Second attempt generated SQL query:
+2025-05-04 21:06:43,177 - DEBUG - STDOUT: WARNING: Failed to generate SQL query after multiple attempts
+2025-05-04 21:06:43,182 - DEBUG - STDOUT: Final SQL query set in response:
+2025-05-04 21:06:43,188 - DEBUG - STDOUT: SQL Generator node output: current_agent=reviewer
+2025-05-04 21:06:43,191 - DEBUG - STDOUT: SQL query generated:
+2025-05-04 21:06:43,193 - DEBUG - STDOUT: SQL Generator response being sent to reviewer: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:43,207 - DEBUG - STDOUT: ==== SQL GENERATOR NODE END ====
+2025-05-04 21:06:43,212 - INFO - Processing agent: SQLGenerator
+2025-05-04 21:06:43,222 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:43,225 - DEBUG - Event keys: dict_keys(['SQLGenerator'])
+2025-05-04 21:06:43,228 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:43,239 - DEBUG - SQLGenerator response: {'sql_generator_response': {'sql_query': '', 'explanation': "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']", 'validation_checks': ['Query generation failed'], 'query_type': 'ERROR', 'estimated_complexity': 'UNKNOWN', 'required_indexes': []}, 'sql_query': ''}
+2025-05-04 21:06:43,249 - DEBUG - STDOUT: 
+==== REVIEWER NODE START ====
+2025-05-04 21:06:43,255 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:43,257 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:43,260 - DEBUG - STDOUT: SQL query to review:
+2025-05-04 21:06:43,262 - DEBUG - STDOUT: SQLGenerator response received: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:43,308 - DEBUG - STDOUT: Reviewer is analyzing SQL query for question: 'list all interfaces'
+2025-05-04 21:06:43,325 - DEBUG - STDOUT: Using LLM-based ReviewerAgent to analyze the SQL query
+2025-05-04 21:06:43,337 - DEBUG - STDOUT: Created ReviewerAgent with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:43,340 - DEBUG - STDOUT: Invoking ReviewerAgent with user_question: 'list all interfaces' and sql_query: ''
+2025-05-04 21:06:43,343 - DEBUG - STDOUT: ReviewerAgent returned review: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:43.343430",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:43,377 - DEBUG - STDOUT: Reviewer node output: current_agent=sql_executor
+2025-05-04 21:06:43,388 - DEBUG - STDOUT: Reviewer response being sent to sql_executor: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:43.343430",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:43,405 - DEBUG - STDOUT: ==== REVIEWER NODE END ====
+2025-05-04 21:06:43,408 - INFO - Processing agent: reviewer
+2025-05-04 21:06:43,412 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:43,421 - DEBUG - Event keys: dict_keys(['reviewer'])
+2025-05-04 21:06:43,425 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:43,427 - DEBUG - reviewer response: {'reviewer_response': {'is_correct': False, 'issues': ['Empty SQL query provided'], 'suggestions': ['Fix the identified issues before proceeding'], 'explanation': 'Review failed due to critical issues', 'security_concerns': [], 'performance_impact': 'HIGH', 'confidence_score': 1.0, 'metadata': {'reviewed_at': '2025-05-04T21:06:43.343430', 'review_status': 'ERROR', 'review_version': '1.0'}}}
+2025-05-04 21:06:43,437 - DEBUG - STDOUT: 
+==== SQL EXECUTOR NODE START ====
+2025-05-04 21:06:43,440 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:43,458 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:43,461 - DEBUG - STDOUT: SQL query to execute:
+2025-05-04 21:06:43,474 - DEBUG - STDOUT: Reviewer response received: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:43.343430",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:43,491 - DEBUG - STDOUT: SQL Executor is processing SQL query: ''
+2025-05-04 21:06:43,493 - DEBUG - STDOUT: ERROR: SQL query is empty. Cannot execute empty query.
+2025-05-04 21:06:43,506 - DEBUG - STDOUT: SQL Executor node error output (empty query): {
+  "current_agent": "router",
+  "errors": {
+    "sql_executor": "Empty SQL query provided"
+  },
+  "execution_path": [
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error",
+    "router",
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error"
+  ],
+  "is_error_state": true,
+  "sql_query_results": {
+    "status": "error",
+    "error_message": "Empty SQL query provided. The SQL Generator failed to create a valid query.",
+    "column_names": [
+      "Error"
+    ],
+    "rows": [
+      [
+        "Empty SQL query provided"
+      ]
+    ],
+    "row_count": 1,
+    "execution_time": 0,
+    "query": ""
+  },
+  "model": "chatgpt-4o-latest",
+  "server": "openai",
+  "temperature": 0.0,
+  "model_endpoint": "https://api.openai.com/v1"
+}
+2025-05-04 21:06:43,528 - DEBUG - STDOUT: ==== SQL EXECUTOR NODE END (WITH ERROR) ====
+2025-05-04 21:06:43,542 - INFO - Processing agent: sql_executor
+2025-05-04 21:06:43,544 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:43,558 - DEBUG - Event keys: dict_keys(['sql_executor'])
+2025-05-04 21:06:43,562 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:43,592 - DEBUG - STDOUT: 
+==== ROUTER NODE START ====
+2025-05-04 21:06:43,610 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:43,622 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:43,637 - DEBUG - STDOUT: RouterAgent returned decision: {
+  "router_response": {
+    "route_to": "planner",
+    "reason": "Starting new workflow",
+    "feedback": "Initializing workflow with planner",
+    "state_updates": {
+      "workflow_started": true,
+      "start_time": "2025-05-04T21:06:43.637726"
+    },
+    "confidence_score": 1.0,
+    "requires_human_input": false
+  }
+}
+2025-05-04 21:06:43,656 - DEBUG - STDOUT: Route decision: planner
+2025-05-04 21:06:43,658 - DEBUG - STDOUT: Router node output: current_agent=planner
+2025-05-04 21:06:43,673 - DEBUG - STDOUT: Router response: {
+  "route_to": "planner",
+  "reason": "Starting new workflow",
+  "feedback": "Initializing workflow with planner",
+  "state_updates": {
+    "workflow_started": true,
+    "start_time": "2025-05-04T21:06:43.637726"
+  },
+  "confidence_score": 1.0,
+  "requires_human_input": false
+}
+2025-05-04 21:06:43,689 - DEBUG - STDOUT: ==== ROUTER NODE END ====
+2025-05-04 21:06:43,695 - DEBUG - STDOUT: ROUTE DECISION: planner -> to_planner
+2025-05-04 21:06:43,707 - INFO - Processing agent: router
+2025-05-04 21:06:43,709 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:43,719 - DEBUG - Event keys: dict_keys(['router'])
+2025-05-04 21:06:43,722 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:43,725 - DEBUG - router response: {'route_to': 'planner', 'reason': 'Starting new workflow', 'feedback': 'Initializing workflow with planner', 'state_updates': {'workflow_started': True, 'start_time': '2025-05-04T21:06:43.637726'}, 'confidence_score': 1.0, 'requires_human_input': False}
+2025-05-04 21:06:43,741 - DEBUG - STDOUT: 
+==== PLANNER NODE START ====
+2025-05-04 21:06:43,759 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:43,786 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:43,792 - DEBUG - STDOUT: Processing user question: 'list all interfaces'
+2025-05-04 21:06:43,835 - DEBUG - STDOUT: Successfully initialized database metadata store and discovery service
+2025-05-04 21:06:43,839 - DEBUG - STDOUT: Successfully initialized PlannerAgent with database capabilities using model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:43,842 - DEBUG - STDOUT: PlannerAgent is using LLM to analyze the query and determine the appropriate database tables and columns
+2025-05-04 21:06:43,853 - DEBUG - STDOUT: Invoking PlannerAgent with question: 'list all interfaces'
+2025-05-04 21:06:43,858 - DEBUG - STDOUT: Invoking Planner with question: list all interfaces...
+2025-05-04 21:06:44,936 - DEBUG - STDOUT: Raw Planner response: {
+    "query_type": "sql",
+    "primary_table_or_datasource": "unknown",
+    "relevant_columns": [],
+    "filtering_conditions": "",
+    "processing_instructions": "Discover all tables or entities that may represent 'interfaces'. Since the term 'interfaces' is ambiguous, list all tables in the database to identify which ones may relate to interfaces. Then, inspect table names and structures to determine which table(s) store interface-related data."
+}
+2025-05-04 21:06:44,945 - DEBUG - STDOUT: PlannerAgent returned plan: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [],
+  "filtering_conditions": "",
+  "processing_instructions": "Discover all tables or entities that may represent 'interfaces'. Since the term 'interfaces' is ambiguous, list all tables in the database to identify which ones may relate to interfaces. Then, inspect table names and structures to determine which table(s) store interface-related data.",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:44.944320",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:44,959 - DEBUG - STDOUT: Planner node output: current_agent=selector
+2025-05-04 21:06:44,962 - DEBUG - STDOUT: Planner response being sent to selector: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [],
+  "filtering_conditions": "",
+  "processing_instructions": "Discover all tables or entities that may represent 'interfaces'. Since the term 'interfaces' is ambiguous, list all tables in the database to identify which ones may relate to interfaces. Then, inspect table names and structures to determine which table(s) store interface-related data.",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:44.944320",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:44,974 - DEBUG - STDOUT: ==== PLANNER NODE END ====
+2025-05-04 21:06:44,982 - INFO - Processing agent: planner
+2025-05-04 21:06:44,986 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:44,989 - DEBUG - Event keys: dict_keys(['planner'])
+2025-05-04 21:06:44,992 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner']
+2025-05-04 21:06:44,996 - DEBUG - planner response: {'query_type': 'sql', 'primary_table_or_datasource': 'unknown', 'relevant_columns': [], 'filtering_conditions': '', 'processing_instructions': "Discover all tables or entities that may represent 'interfaces'. Since the term 'interfaces' is ambiguous, list all tables in the database to identify which ones may relate to interfaces. Then, inspect table names and structures to determine which table(s) store interface-related data.", 'validated': True, 'timestamp': '2025-05-04 21:06:44.944320', 'agent': 'planner', 'user_question': 'list all interfaces'}
+2025-05-04 21:06:45,043 - DEBUG - STDOUT: 
+==== SELECTOR NODE START ====
+2025-05-04 21:06:45,117 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:45,137 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner']
+2025-05-04 21:06:45,187 - DEBUG - STDOUT: Planner response received: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [],
+  "filtering_conditions": "",
+  "processing_instructions": "Discover all tables or entities that may represent 'interfaces'. Since the term 'interfaces' is ambiguous, list all tables in the database to identify which ones may relate to interfaces. Then, inspect table names and structures to determine which table(s) store interface-related data.",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:44.944320",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:45,325 - DEBUG - STDOUT: Selector is processing planner response for question: 'list all interfaces'
+2025-05-04 21:06:45,357 - DEBUG - STDOUT: NOTE: The selector node is currently simplified and doesn't use LLM.
+2025-05-04 21:06:45,393 - DEBUG - STDOUT: It simply passes through to the SQLGenerator without making actual selections.
+2025-05-04 21:06:45,417 - DEBUG - STDOUT: Selector node output: current_agent=SQLGenerator
+2025-05-04 21:06:45,423 - DEBUG - STDOUT: Selector response being sent to SQLGenerator: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [],
+    "filters": ""
+  }
+}
+2025-05-04 21:06:45,492 - DEBUG - STDOUT: ==== SELECTOR NODE END ====
+2025-05-04 21:06:45,521 - INFO - Processing agent: selector
+2025-05-04 21:06:45,522 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:45,526 - DEBUG - Event keys: dict_keys(['selector'])
+2025-05-04 21:06:45,536 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector']
+2025-05-04 21:06:45,540 - DEBUG - selector response: {'raw': 'Selection completed', 'selected_schemas': {}, 'selected_tool': 'sql_query', 'selected_datasource': 'unknown', 'information_needed': 'Table listing', 'reason_for_selection': 'Direct database query is the most efficient way to list tables', 'query_parameters': {'columns': [], 'filters': ''}}
+2025-05-04 21:06:45,551 - DEBUG - STDOUT: 
+==== SQL GENERATOR NODE START ====
+2025-05-04 21:06:45,590 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:45,621 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector']
+2025-05-04 21:06:45,639 - DEBUG - STDOUT: Selector response received: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [],
+    "filters": ""
+  }
+}
+2025-05-04 21:06:45,656 - DEBUG - STDOUT: Non-standard query detected, using LLM-based SQLGenerator
+2025-05-04 21:06:45,660 - DEBUG - STDOUT: Created SQLGenerator with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:45,673 - DEBUG - STDOUT: Invoking SQLGenerator with user_question: 'list all interfaces'
+2025-05-04 21:06:48,130 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:48,156 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:48,158 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:48,166 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:48,169 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:48,174 - DEBUG - STDOUT: SQLGenerator returned response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:48,186 - DEBUG - STDOUT: Found sql_query in sql_generator_response:
+2025-05-04 21:06:48,189 - DEBUG - STDOUT: SQL query was not generated. Retrying with more explicit instructions.
+2025-05-04 21:06:48,193 - DEBUG - STDOUT: Retrying with explicit prompt: 
+            I need a SQL query to answer this question: "list all interfaces"
+
+            If this is asking to list tables, use:
+            SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+
+            If this is asking about specific table contents, use:
+            SELECT * FROM [table_name] LIMIT 10;
+
+            Please generate ONLY the SQL query without any explanation.
+2025-05-04 21:06:49,982 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:50,006 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:50,011 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:50,018 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:50,022 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:50,027 - DEBUG - STDOUT: Second attempt response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:50,037 - DEBUG - STDOUT: Second attempt generated SQL query:
+2025-05-04 21:06:50,041 - DEBUG - STDOUT: WARNING: Failed to generate SQL query after multiple attempts
+2025-05-04 21:06:50,048 - DEBUG - STDOUT: Final SQL query set in response:
+2025-05-04 21:06:50,051 - DEBUG - STDOUT: SQL Generator node output: current_agent=reviewer
+2025-05-04 21:06:50,056 - DEBUG - STDOUT: SQL query generated:
+2025-05-04 21:06:50,071 - DEBUG - STDOUT: SQL Generator response being sent to reviewer: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:50,090 - DEBUG - STDOUT: ==== SQL GENERATOR NODE END ====
+2025-05-04 21:06:50,106 - INFO - Processing agent: SQLGenerator
+2025-05-04 21:06:50,117 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:50,120 - DEBUG - Event keys: dict_keys(['SQLGenerator'])
+2025-05-04 21:06:50,121 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:50,132 - DEBUG - SQLGenerator response: {'sql_generator_response': {'sql_query': '', 'explanation': "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']", 'validation_checks': ['Query generation failed'], 'query_type': 'ERROR', 'estimated_complexity': 'UNKNOWN', 'required_indexes': []}, 'sql_query': ''}
+2025-05-04 21:06:50,137 - DEBUG - STDOUT: 
+==== REVIEWER NODE START ====
+2025-05-04 21:06:50,141 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:50,150 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:50,154 - DEBUG - STDOUT: SQL query to review:
+2025-05-04 21:06:50,157 - DEBUG - STDOUT: SQLGenerator response received: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:50,181 - DEBUG - STDOUT: Reviewer is analyzing SQL query for question: 'list all interfaces'
+2025-05-04 21:06:50,185 - DEBUG - STDOUT: Using LLM-based ReviewerAgent to analyze the SQL query
+2025-05-04 21:06:50,201 - DEBUG - STDOUT: Created ReviewerAgent with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:50,204 - DEBUG - STDOUT: Invoking ReviewerAgent with user_question: 'list all interfaces' and sql_query: ''
+2025-05-04 21:06:50,217 - DEBUG - STDOUT: ReviewerAgent returned review: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:50.216657",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:50,251 - DEBUG - STDOUT: Reviewer node output: current_agent=sql_executor
+2025-05-04 21:06:50,255 - DEBUG - STDOUT: Reviewer response being sent to sql_executor: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:50.216657",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:50,273 - DEBUG - STDOUT: ==== REVIEWER NODE END ====
+2025-05-04 21:06:50,287 - INFO - Processing agent: reviewer
+2025-05-04 21:06:50,289 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:50,305 - DEBUG - Event keys: dict_keys(['reviewer'])
+2025-05-04 21:06:50,313 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:50,319 - DEBUG - reviewer response: {'reviewer_response': {'is_correct': False, 'issues': ['Empty SQL query provided'], 'suggestions': ['Fix the identified issues before proceeding'], 'explanation': 'Review failed due to critical issues', 'security_concerns': [], 'performance_impact': 'HIGH', 'confidence_score': 1.0, 'metadata': {'reviewed_at': '2025-05-04T21:06:50.216657', 'review_status': 'ERROR', 'review_version': '1.0'}}}
+2025-05-04 21:06:50,335 - DEBUG - STDOUT: 
+==== SQL EXECUTOR NODE START ====
+2025-05-04 21:06:50,339 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:50,351 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:50,372 - DEBUG - STDOUT: SQL query to execute:
+2025-05-04 21:06:50,386 - DEBUG - STDOUT: Reviewer response received: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:50.216657",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:50,416 - DEBUG - STDOUT: SQL Executor is processing SQL query: ''
+2025-05-04 21:06:50,419 - DEBUG - STDOUT: ERROR: SQL query is empty. Cannot execute empty query.
+2025-05-04 21:06:50,422 - DEBUG - STDOUT: SQL Executor node error output (empty query): {
+  "current_agent": "router",
+  "errors": {
+    "sql_executor": "Empty SQL query provided"
+  },
+  "execution_path": [
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error",
+    "router",
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error",
+    "router",
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error"
+  ],
+  "is_error_state": true,
+  "sql_query_results": {
+    "status": "error",
+    "error_message": "Empty SQL query provided. The SQL Generator failed to create a valid query.",
+    "column_names": [
+      "Error"
+    ],
+    "rows": [
+      [
+        "Empty SQL query provided"
+      ]
+    ],
+    "row_count": 1,
+    "execution_time": 0,
+    "query": ""
+  },
+  "model": "chatgpt-4o-latest",
+  "server": "openai",
+  "temperature": 0.0,
+  "model_endpoint": "https://api.openai.com/v1"
+}
+2025-05-04 21:06:50,470 - DEBUG - STDOUT: ==== SQL EXECUTOR NODE END (WITH ERROR) ====
+2025-05-04 21:06:50,483 - INFO - Processing agent: sql_executor
+2025-05-04 21:06:50,486 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:50,488 - DEBUG - Event keys: dict_keys(['sql_executor'])
+2025-05-04 21:06:50,500 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:50,506 - DEBUG - STDOUT: 
+==== ROUTER NODE START ====
+2025-05-04 21:06:50,520 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:50,522 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:50,536 - DEBUG - STDOUT: RouterAgent returned decision: {
+  "router_response": {
+    "route_to": "planner",
+    "reason": "Starting new workflow",
+    "feedback": "Initializing workflow with planner",
+    "state_updates": {
+      "workflow_started": true,
+      "start_time": "2025-05-04T21:06:50.536703"
+    },
+    "confidence_score": 1.0,
+    "requires_human_input": false
+  }
+}
+2025-05-04 21:06:50,553 - DEBUG - STDOUT: Route decision: planner
+2025-05-04 21:06:50,567 - DEBUG - STDOUT: Router node output: current_agent=planner
+2025-05-04 21:06:50,587 - DEBUG - STDOUT: Router response: {
+  "route_to": "planner",
+  "reason": "Starting new workflow",
+  "feedback": "Initializing workflow with planner",
+  "state_updates": {
+    "workflow_started": true,
+    "start_time": "2025-05-04T21:06:50.536703"
+  },
+  "confidence_score": 1.0,
+  "requires_human_input": false
+}
+2025-05-04 21:06:50,621 - DEBUG - STDOUT: ==== ROUTER NODE END ====
+2025-05-04 21:06:50,635 - DEBUG - STDOUT: ROUTE DECISION: planner -> to_planner
+2025-05-04 21:06:50,640 - INFO - Processing agent: router
+2025-05-04 21:06:50,651 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:50,655 - DEBUG - Event keys: dict_keys(['router'])
+2025-05-04 21:06:50,665 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:50,670 - DEBUG - router response: {'route_to': 'planner', 'reason': 'Starting new workflow', 'feedback': 'Initializing workflow with planner', 'state_updates': {'workflow_started': True, 'start_time': '2025-05-04T21:06:50.536703'}, 'confidence_score': 1.0, 'requires_human_input': False}
+2025-05-04 21:06:50,684 - DEBUG - STDOUT: 
+==== PLANNER NODE START ====
+2025-05-04 21:06:50,688 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:50,700 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:50,715 - DEBUG - STDOUT: Processing user question: 'list all interfaces'
+2025-05-04 21:06:50,751 - DEBUG - STDOUT: Successfully initialized database metadata store and discovery service
+2025-05-04 21:06:50,755 - DEBUG - STDOUT: Successfully initialized PlannerAgent with database capabilities using model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:50,768 - DEBUG - STDOUT: PlannerAgent is using LLM to analyze the query and determine the appropriate database tables and columns
+2025-05-04 21:06:50,773 - DEBUG - STDOUT: Invoking PlannerAgent with question: 'list all interfaces'
+2025-05-04 21:06:50,784 - DEBUG - STDOUT: Invoking Planner with question: list all interfaces...
+2025-05-04 21:06:51,653 - DEBUG - STDOUT: Raw Planner response: {
+    "query_type": "sql",
+    "primary_table_or_datasource": "unknown",
+    "relevant_columns": ["interface_name", "interface_id", "description"],
+    "filtering_conditions": "none specified",
+    "processing_instructions": "Discover the schema to identify which table contains interface data, then list all interfaces with relevant identifying columns"
+}
+2025-05-04 21:06:51,663 - DEBUG - STDOUT: PlannerAgent returned plan: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [
+    "interface_name",
+    "interface_id",
+    "description"
+  ],
+  "filtering_conditions": "none specified",
+  "processing_instructions": "Discover the schema to identify which table contains interface data, then list all interfaces with relevant identifying columns",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:51.662384",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:51,676 - DEBUG - STDOUT: Planner node output: current_agent=selector
+2025-05-04 21:06:51,681 - DEBUG - STDOUT: Planner response being sent to selector: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [
+    "interface_name",
+    "interface_id",
+    "description"
+  ],
+  "filtering_conditions": "none specified",
+  "processing_instructions": "Discover the schema to identify which table contains interface data, then list all interfaces with relevant identifying columns",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:51.662384",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:51,692 - DEBUG - STDOUT: ==== PLANNER NODE END ====
+2025-05-04 21:06:51,699 - INFO - Processing agent: planner
+2025-05-04 21:06:51,702 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:51,704 - DEBUG - Event keys: dict_keys(['planner'])
+2025-05-04 21:06:51,709 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner']
+2025-05-04 21:06:51,714 - DEBUG - planner response: {'query_type': 'sql', 'primary_table_or_datasource': 'unknown', 'relevant_columns': ['interface_name', 'interface_id', 'description'], 'filtering_conditions': 'none specified', 'processing_instructions': 'Discover the schema to identify which table contains interface data, then list all interfaces with relevant identifying columns', 'validated': True, 'timestamp': '2025-05-04 21:06:51.662384', 'agent': 'planner', 'user_question': 'list all interfaces'}
+2025-05-04 21:06:51,717 - DEBUG - STDOUT: 
+==== SELECTOR NODE START ====
+2025-05-04 21:06:51,721 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:51,734 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner']
+2025-05-04 21:06:51,747 - DEBUG - STDOUT: Planner response received: {
+  "query_type": "sql",
+  "primary_table_or_datasource": "unknown",
+  "relevant_columns": [
+    "interface_name",
+    "interface_id",
+    "description"
+  ],
+  "filtering_conditions": "none specified",
+  "processing_instructions": "Discover the schema to identify which table contains interface data, then list all interfaces with relevant identifying columns",
+  "validated": true,
+  "timestamp": "2025-05-04 21:06:51.662384",
+  "agent": "planner",
+  "user_question": "list all interfaces"
+}
+2025-05-04 21:06:51,764 - DEBUG - STDOUT: Selector is processing planner response for question: 'list all interfaces'
+2025-05-04 21:06:51,776 - DEBUG - STDOUT: NOTE: The selector node is currently simplified and doesn't use LLM.
+2025-05-04 21:06:51,783 - DEBUG - STDOUT: It simply passes through to the SQLGenerator without making actual selections.
+2025-05-04 21:06:51,788 - DEBUG - STDOUT: Selector node output: current_agent=SQLGenerator
+2025-05-04 21:06:51,802 - DEBUG - STDOUT: Selector response being sent to SQLGenerator: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [
+      "interface_name",
+      "interface_id",
+      "description"
+    ],
+    "filters": "none specified"
+  }
+}
+2025-05-04 21:06:51,817 - DEBUG - STDOUT: ==== SELECTOR NODE END ====
+2025-05-04 21:06:51,822 - INFO - Processing agent: selector
+2025-05-04 21:06:51,832 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:51,838 - DEBUG - Event keys: dict_keys(['selector'])
+2025-05-04 21:06:51,847 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector']
+2025-05-04 21:06:51,852 - DEBUG - selector response: {'raw': 'Selection completed', 'selected_schemas': {}, 'selected_tool': 'sql_query', 'selected_datasource': 'unknown', 'information_needed': 'Table listing', 'reason_for_selection': 'Direct database query is the most efficient way to list tables', 'query_parameters': {'columns': ['interface_name', 'interface_id', 'description'], 'filters': 'none specified'}}
+2025-05-04 21:06:51,865 - DEBUG - STDOUT: 
+==== SQL GENERATOR NODE START ====
+2025-05-04 21:06:51,868 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:51,870 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector']
+2025-05-04 21:06:51,882 - DEBUG - STDOUT: Selector response received: {
+  "raw": "Selection completed",
+  "selected_schemas": {},
+  "selected_tool": "sql_query",
+  "selected_datasource": "unknown",
+  "information_needed": "Table listing",
+  "reason_for_selection": "Direct database query is the most efficient way to list tables",
+  "query_parameters": {
+    "columns": [
+      "interface_name",
+      "interface_id",
+      "description"
+    ],
+    "filters": "none specified"
+  }
+}
+2025-05-04 21:06:51,891 - DEBUG - STDOUT: Non-standard query detected, using LLM-based SQLGenerator
+2025-05-04 21:06:51,898 - DEBUG - STDOUT: Created SQLGenerator with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:51,900 - DEBUG - STDOUT: Invoking SQLGenerator with user_question: 'list all interfaces'
+2025-05-04 21:06:54,892 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:54,923 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:54,929 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:54,933 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:54,937 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:54,944 - DEBUG - STDOUT: SQLGenerator returned response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:54,952 - DEBUG - STDOUT: Found sql_query in sql_generator_response:
+2025-05-04 21:06:54,960 - DEBUG - STDOUT: SQL query was not generated. Retrying with more explicit instructions.
+2025-05-04 21:06:54,964 - DEBUG - STDOUT: Retrying with explicit prompt: 
+            I need a SQL query to answer this question: "list all interfaces"
+
+            If this is asking to list tables, use:
+            SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+
+            If this is asking about specific table contents, use:
+            SELECT * FROM [table_name] LIMIT 10;
+
+            Please generate ONLY the SQL query without any explanation.
+2025-05-04 21:06:56,575 - DEBUG - STDOUT: Error in SQL generator: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:56,628 - DEBUG - STDERR: Traceback (most recent call last):
+2025-05-04 21:06:56,631 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1763, in invoke
+    You MUST respond with a valid JSON object containing:
+2025-05-04 21:06:56,636 - DEBUG - STDERR:   File "D:\versa\project_Files\working\streamlitapp_30.04.2025\streamlit_app\agents\agents.py", line 1819, in _validate_response
+2025-05-04 21:06:56,644 - DEBUG - STDERR: ValueError: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']
+2025-05-04 21:06:56,648 - DEBUG - STDOUT: Second attempt response: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  }
+}
+2025-05-04 21:06:56,661 - DEBUG - STDOUT: Second attempt generated SQL query:
+2025-05-04 21:06:56,665 - DEBUG - STDOUT: WARNING: Failed to generate SQL query after multiple attempts
+2025-05-04 21:06:56,668 - DEBUG - STDOUT: Final SQL query set in response:
+2025-05-04 21:06:56,675 - DEBUG - STDOUT: SQL Generator node output: current_agent=reviewer
+2025-05-04 21:06:56,678 - DEBUG - STDOUT: SQL query generated:
+2025-05-04 21:06:56,682 - DEBUG - STDOUT: SQL Generator response being sent to reviewer: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:56,697 - DEBUG - STDOUT: ==== SQL GENERATOR NODE END ====
+2025-05-04 21:06:56,711 - INFO - Processing agent: SQLGenerator
+2025-05-04 21:06:56,714 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:56,717 - DEBUG - Event keys: dict_keys(['SQLGenerator'])
+2025-05-04 21:06:56,731 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:56,746 - DEBUG - SQLGenerator response: {'sql_generator_response': {'sql_query': '', 'explanation': "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']", 'validation_checks': ['Query generation failed'], 'query_type': 'ERROR', 'estimated_complexity': 'UNKNOWN', 'required_indexes': []}, 'sql_query': ''}
+2025-05-04 21:06:56,759 - DEBUG - STDOUT: 
+==== REVIEWER NODE START ====
+2025-05-04 21:06:56,763 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:56,767 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator']
+2025-05-04 21:06:56,782 - DEBUG - STDOUT: SQL query to review:
+2025-05-04 21:06:56,793 - DEBUG - STDOUT: SQLGenerator response received: {
+  "sql_generator_response": {
+    "sql_query": "",
+    "explanation": "Error occurred: Missing required fields in SQL generator response: ['sql_query', 'explanation', 'validation_checks', 'query_type', 'estimated_complexity', 'required_indexes']",
+    "validation_checks": [
+      "Query generation failed"
+    ],
+    "query_type": "ERROR",
+    "estimated_complexity": "UNKNOWN",
+    "required_indexes": []
+  },
+  "sql_query": ""
+}
+2025-05-04 21:06:56,809 - DEBUG - STDOUT: Reviewer is analyzing SQL query for question: 'list all interfaces'
+2025-05-04 21:06:56,812 - DEBUG - STDOUT: Using LLM-based ReviewerAgent to analyze the SQL query
+2025-05-04 21:06:56,815 - DEBUG - STDOUT: Created ReviewerAgent with model=chatgpt-4o-latest, server=openai
+2025-05-04 21:06:56,828 - DEBUG - STDOUT: Invoking ReviewerAgent with user_question: 'list all interfaces' and sql_query: ''
+2025-05-04 21:06:56,832 - DEBUG - STDOUT: ReviewerAgent returned review: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:56.831704",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:56,850 - DEBUG - STDOUT: Reviewer node output: current_agent=sql_executor
+2025-05-04 21:06:56,859 - DEBUG - STDOUT: Reviewer response being sent to sql_executor: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:56.831704",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:56,883 - DEBUG - STDOUT: ==== REVIEWER NODE END ====
+2025-05-04 21:06:56,899 - INFO - Processing agent: reviewer
+2025-05-04 21:06:56,900 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:56,916 - DEBUG - Event keys: dict_keys(['reviewer'])
+2025-05-04 21:06:56,927 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:56,932 - DEBUG - reviewer response: {'reviewer_response': {'is_correct': False, 'issues': ['Empty SQL query provided'], 'suggestions': ['Fix the identified issues before proceeding'], 'explanation': 'Review failed due to critical issues', 'security_concerns': [], 'performance_impact': 'HIGH', 'confidence_score': 1.0, 'metadata': {'reviewed_at': '2025-05-04T21:06:56.831704', 'review_status': 'ERROR', 'review_version': '1.0'}}}
+2025-05-04 21:06:56,944 - DEBUG - STDOUT: 
+==== SQL EXECUTOR NODE START ====
+2025-05-04 21:06:56,947 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:56,950 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer']
+2025-05-04 21:06:56,962 - DEBUG - STDOUT: SQL query to execute:
+2025-05-04 21:06:56,966 - DEBUG - STDOUT: Reviewer response received: {
+  "reviewer_response": {
+    "is_correct": false,
+    "issues": [
+      "Empty SQL query provided"
+    ],
+    "suggestions": [
+      "Fix the identified issues before proceeding"
+    ],
+    "explanation": "Review failed due to critical issues",
+    "security_concerns": [],
+    "performance_impact": "HIGH",
+    "confidence_score": 1.0,
+    "metadata": {
+      "reviewed_at": "2025-05-04T21:06:56.831704",
+      "review_status": "ERROR",
+      "review_version": "1.0"
+    }
+  }
+}
+2025-05-04 21:06:56,993 - DEBUG - STDOUT: SQL Executor is processing SQL query: ''
+2025-05-04 21:06:56,996 - DEBUG - STDOUT: ERROR: SQL query is empty. Cannot execute empty query.
+2025-05-04 21:06:56,999 - DEBUG - STDOUT: SQL Executor node error output (empty query): {
+  "current_agent": "router",
+  "errors": {
+    "sql_executor": "Empty SQL query provided"
+  },
+  "execution_path": [
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error",
+    "router",
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error",
+    "router",
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error",
+    "router",
+    "planner",
+    "selector",
+    "SQLGenerator",
+    "reviewer",
+    "sql_executor_error"
+  ],
+  "is_error_state": true,
+  "sql_query_results": {
+    "status": "error",
+    "error_message": "Empty SQL query provided. The SQL Generator failed to create a valid query.",
+    "column_names": [
+      "Error"
+    ],
+    "rows": [
+      [
+        "Empty SQL query provided"
+      ]
+    ],
+    "row_count": 1,
+    "execution_time": 0,
+    "query": ""
+  },
+  "model": "chatgpt-4o-latest",
+  "server": "openai",
+  "temperature": 0.0,
+  "model_endpoint": "https://api.openai.com/v1"
+}
+2025-05-04 21:06:57,031 - DEBUG - STDOUT: ==== SQL EXECUTOR NODE END (WITH ERROR) ====
+2025-05-04 21:06:57,044 - INFO - Processing agent: sql_executor
+2025-05-04 21:06:57,048 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:57,051 - DEBUG - Event keys: dict_keys(['sql_executor'])
+2025-05-04 21:06:57,064 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:57,080 - DEBUG - STDOUT: 
+==== ROUTER NODE START ====
+2025-05-04 21:06:57,084 - DEBUG - STDOUT: Input state: user_question=list all interfaces
+2025-05-04 21:06:57,095 - DEBUG - STDOUT: Current execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error']
+2025-05-04 21:06:57,100 - DEBUG - STDOUT: RouterAgent returned decision: {
+  "router_response": {
+    "route_to": "planner",
+    "reason": "Starting new workflow",
+    "feedback": "Initializing workflow with planner",
+    "state_updates": {
+      "workflow_started": true,
+      "start_time": "2025-05-04T21:06:57.100954"
+    },
+    "confidence_score": 1.0,
+    "requires_human_input": false
+  }
+}
+2025-05-04 21:06:57,118 - DEBUG - STDOUT: Route decision: planner
+2025-05-04 21:06:57,127 - DEBUG - STDOUT: Router node output: current_agent=planner
+2025-05-04 21:06:57,129 - DEBUG - STDOUT: Router response: {
+  "route_to": "planner",
+  "reason": "Starting new workflow",
+  "feedback": "Initializing workflow with planner",
+  "state_updates": {
+    "workflow_started": true,
+    "start_time": "2025-05-04T21:06:57.100954"
+  },
+  "confidence_score": 1.0,
+  "requires_human_input": false
+}
+2025-05-04 21:06:57,144 - DEBUG - STDOUT: ==== ROUTER NODE END ====
+2025-05-04 21:06:57,148 - DEBUG - STDOUT: RECURSION GUARD: Node planner visited 4 times. Forcing to end.
+2025-05-04 21:06:57,151 - INFO - Processing agent: router
+2025-05-04 21:06:57,160 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:57,162 - DEBUG - Event keys: dict_keys(['router'])
+2025-05-04 21:06:57,165 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:57,178 - DEBUG - router response: {'route_to': 'planner', 'reason': 'Starting new workflow', 'feedback': 'Initializing workflow with planner', 'state_updates': {'workflow_started': True, 'start_time': '2025-05-04T21:06:57.100954'}, 'confidence_score': 1.0, 'requires_human_input': False}
+2025-05-04 21:06:57,181 - DEBUG - STDOUT: 
+==== END NODE START ====
+2025-05-04 21:06:57,183 - DEBUG - STDOUT: Processing final state
+2025-05-04 21:06:57,193 - DEBUG - STDOUT: Creating default final report
+2025-05-04 21:06:57,196 - DEBUG - STDOUT: Final report prepared successfully
+2025-05-04 21:06:57,199 - DEBUG - STDOUT: ==== END NODE END ====
+2025-05-04 21:06:57,226 - INFO - Processing agent: end
+2025-05-04 21:06:57,230 - DEBUG - Event type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:57,232 - DEBUG - Event keys: dict_keys(['end'])
+2025-05-04 21:06:57,248 - DEBUG - Execution path: ['planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router', 'planner', 'selector', 'SQLGenerator', 'reviewer', 'sql_executor_error', 'router']
+2025-05-04 21:06:57,261 - DEBUG - Final state type: <class 'langgraph.pregel.io.AddableUpdatesDict'>
+2025-05-04 21:06:57,263 - DEBUG - Final state keys: dict_keys(['end'])
+2025-05-04 21:06:57,267 - DEBUG - End node type: <class 'dict'>
+2025-05-04 21:06:57,277 - DEBUG - End node keys: dict_keys(['current_agent', 'user_question', 'selected_schema', 'tool_responses', 'execution_path', 'errors', 'is_error_state', 'planner_response', 'selector_response', 'SQLGenerator_response', 'reviewer_response', 'router_response', 'final_report_response', 'final_report_data', 'schemas', 'sql_query', 'sql_query_results', 'previous_selections', 'previous_reports', 'start_time', 'retry_counts', 'last_successful_state', 'end_chain', 'current_node', 'iteration_count', 'error_count', 'last_error', 'last_success', 'metadata', 'workflow_completed', 'completion_timestamp'])
+2025-05-04 21:06:57,283 - INFO - SQL query results: {'status': 'error', 'error_message': 'Empty SQL query provided. The SQL Generator failed to create a valid query.', 'column_names': ['Error'], 'rows': [['Empty SQL query provided']], 'row_count': 1, 'execution_time': 0, 'query': ''}
+2025-05-04 21:06:57,297 - INFO - SQL query: 

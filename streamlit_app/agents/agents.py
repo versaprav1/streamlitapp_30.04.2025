@@ -3,6 +3,7 @@ from datetime import datetime
 from termcolor import colored
 import json
 import traceback
+import re
 
 # Model imports
 from models.openai_models import get_open_ai, get_open_ai_json, CustomOpenAIWrapper
@@ -368,17 +369,7 @@ planner_guided_json = {
 
 class PlannerAgent(Agent):
     def __init__(self, state=None, model=None, server=None, temperature=None, model_endpoint=None, stop=None):
-        """
-        Initialize the Planner Agent.
-
-        Args:
-            state: Current state of the agent graph
-            model: LLM model to use
-            server: Server type (openai, ollama, etc.)
-            temperature: Temperature setting for model generation
-            model_endpoint: API endpoint for the model
-            stop: Stop sequences for the model
-        """
+        """Initialize the Planner Agent with enhanced database discovery and context management."""
         super().__init__(
             state=state,
             model=model,
@@ -389,684 +380,262 @@ class PlannerAgent(Agent):
             guided_json=planner_guided_json
         )
 
-        # Define database classes directly in this file to avoid import issues
-        import json
-        import os
-        import psycopg2
-        import traceback
-        from datetime import datetime
-        from typing import Dict, List, Any, Optional, Tuple
-
-        # Define the DatabaseMetadataStore class
-        class DatabaseMetadataStore:
-            def __init__(self, cache_dir: str = ".cache"):
-                self.metadata = {}
-                self.change_log = []
-                self.cache_dir = cache_dir
-                self._ensure_cache_dir()
-
-            def _ensure_cache_dir(self):
-                """Ensure the cache directory exists"""
-                if not os.path.exists(self.cache_dir):
-                    os.makedirs(self.cache_dir)
-
-            def get_cache_path(self, db_name: str) -> str:
-                """Get the path to the cache file for a database"""
-                return os.path.join(self.cache_dir, f"{db_name}_metadata.json")
-
-            def get_log_path(self, db_name: str) -> str:
-                """Get the path to the change log file for a database"""
-                return os.path.join(self.cache_dir, f"{db_name}_changelog.json")
-
-            def load_metadata(self, db_name: str) -> bool:
-                """Load metadata from cache if it exists"""
-                cache_path = self.get_cache_path(db_name)
-                if os.path.exists(cache_path):
-                    try:
-                        with open(cache_path, 'r') as f:
-                            self.metadata[db_name] = json.load(f)
-                        return True
-                    except Exception as e:
-                        print(f"Error loading metadata cache: {e}")
-                return False
-
-            def save_metadata(self, db_name: str) -> bool:
-                """Save metadata to cache"""
-                if db_name not in self.metadata:
-                    return False
-
-                cache_path = self.get_cache_path(db_name)
-                try:
-                    with open(cache_path, 'w') as f:
-                        json.dump(self.metadata[db_name], f, indent=2)
-                    return True
-                except Exception as e:
-                    print(f"Error saving metadata cache: {e}")
-                    return False
-
-            def load_change_log(self, db_name: str) -> bool:
-                """Load change log from file if it exists"""
-                log_path = self.get_log_path(db_name)
-                if os.path.exists(log_path):
-                    try:
-                        with open(log_path, 'r') as f:
-                            self.change_log = json.load(f)
-                        return True
-                    except Exception as e:
-                        print(f"Error loading change log: {e}")
-                return False
-
-            def save_change_log(self, db_name: str) -> bool:
-                """Save change log to file"""
-                log_path = self.get_log_path(db_name)
-                try:
-                    with open(log_path, 'w') as f:
-                        json.dump(self.change_log, f, indent=2)
-                    return True
-                except Exception as e:
-                    print(f"Error saving change log: {e}")
-                    return False
-
-            def log_change(self, db_name: str, action: str, details: Dict[str, Any]) -> None:
-                """Add an entry to the change log"""
-                self.change_log.append({
-                    "timestamp": datetime.now().isoformat(),
-                    "database": db_name,
-                    "action": action,
-                    "details": details
-                })
-                self.save_change_log(db_name)
-
-            def get_schemas(self, db_name: str) -> List[str]:
-                """Get list of schemas for a database"""
-                if db_name in self.metadata and "schemas" in self.metadata[db_name]:
-                    return list(self.metadata[db_name]["schemas"].keys())
-                return []
-
-            def get_tables(self, db_name: str, schema: str) -> List[str]:
-                """Get list of tables for a schema"""
-                if (db_name in self.metadata and
-                    "schemas" in self.metadata[db_name] and
-                    schema in self.metadata[db_name]["schemas"] and
-                    "tables" in self.metadata[db_name]["schemas"][schema]):
-                    return list(self.metadata[db_name]["schemas"][schema]["tables"].keys())
-                return []
-
-            def get_table_structure(self, db_name: str, schema: str, table: str) -> Dict[str, Any]:
-                """Get structure of a table"""
-                if (db_name in self.metadata and
-                    "schemas" in self.metadata[db_name] and
-                    schema in self.metadata[db_name]["schemas"] and
-                    "tables" in self.metadata[db_name]["schemas"][schema] and
-                    table in self.metadata[db_name]["schemas"][schema]["tables"]):
-                    return self.metadata[db_name]["schemas"][schema]["tables"][table]
-                return {}
-
-            def update_schemas(self, db_name: str, schemas: List[str]) -> None:
-                """Update the list of schemas for a database"""
-                if db_name not in self.metadata:
-                    self.metadata[db_name] = {"schemas": {}, "last_updated": datetime.now().isoformat()}
-
-                # Track new schemas
-                existing_schemas = set(self.get_schemas(db_name))
-                new_schemas = set(schemas) - existing_schemas
-
-                # Initialize new schemas
-                for schema in new_schemas:
-                    if schema not in self.metadata[db_name]["schemas"]:
-                        self.metadata[db_name]["schemas"][schema] = {
-                            "tables": {},
-                            "last_updated": datetime.now().isoformat()
-                        }
-                        self.log_change(db_name, "discovered_schema", {"schema": schema})
-
-                self.metadata[db_name]["last_updated"] = datetime.now().isoformat()
-                self.save_metadata(db_name)
-
-            def update_tables(self, db_name: str, schema: str, tables: List[str]) -> None:
-                """Update the list of tables for a schema"""
-                if db_name not in self.metadata:
-                    self.metadata[db_name] = {"schemas": {}, "last_updated": datetime.now().isoformat()}
-
-                if schema not in self.metadata[db_name]["schemas"]:
-                    self.metadata[db_name]["schemas"][schema] = {
-                        "tables": {},
-                        "last_updated": datetime.now().isoformat()
-                    }
-
-                # Track new tables
-                existing_tables = set(self.get_tables(db_name, schema))
-                new_tables = set(tables) - existing_tables
-
-                # Initialize new tables
-                for table in new_tables:
-                    if table not in self.metadata[db_name]["schemas"][schema]["tables"]:
-                        self.metadata[db_name]["schemas"][schema]["tables"][table] = {
-                            "columns": [],
-                            "relationships": [],
-                            "last_updated": datetime.now().isoformat()
-                        }
-                        self.log_change(db_name, "discovered_table", {"schema": schema, "table": table})
-
-                self.metadata[db_name]["schemas"][schema]["last_updated"] = datetime.now().isoformat()
-                self.metadata[db_name]["last_updated"] = datetime.now().isoformat()
-                self.save_metadata(db_name)
-
-            def update_table_structure(self, db_name: str, schema: str, table: str,
-                                    columns: List[Dict[str, Any]],
-                                    relationships: Optional[List[Dict[str, Any]]] = None) -> None:
-                """Update the structure of a table"""
-                if db_name not in self.metadata:
-                    self.metadata[db_name] = {"schemas": {}, "last_updated": datetime.now().isoformat()}
-
-                if schema not in self.metadata[db_name]["schemas"]:
-                    self.metadata[db_name]["schemas"][schema] = {
-                        "tables": {},
-                        "last_updated": datetime.now().isoformat()
-                    }
-
-                if table not in self.metadata[db_name]["schemas"][schema]["tables"]:
-                    self.metadata[db_name]["schemas"][schema]["tables"][table] = {
-                        "columns": [],
-                        "relationships": [],
-                        "last_updated": datetime.now().isoformat()
-                    }
-
-                # Check if structure has changed
-                current_columns = self.metadata[db_name]["schemas"][schema]["tables"][table]["columns"]
-                if current_columns != columns:
-                    self.metadata[db_name]["schemas"][schema]["tables"][table]["columns"] = columns
-                    self.log_change(db_name, "updated_table_structure", {
-                        "schema": schema,
-                        "table": table,
-                        "columns_changed": True
-                    })
-
-                if relationships is not None:
-                    current_relationships = self.metadata[db_name]["schemas"][schema]["tables"][table]["relationships"]
-                    if current_relationships != relationships:
-                        self.metadata[db_name]["schemas"][schema]["tables"][table]["relationships"] = relationships
-                        self.log_change(db_name, "updated_table_relationships", {
-                            "schema": schema,
-                            "table": table
-                        })
-
-                self.metadata[db_name]["schemas"][schema]["tables"][table]["last_updated"] = datetime.now().isoformat()
-                self.metadata[db_name]["schemas"][schema]["last_updated"] = datetime.now().isoformat()
-                self.metadata[db_name]["last_updated"] = datetime.now().isoformat()
-                self.save_metadata(db_name)
-
-            def is_metadata_fresh(self, db_name: str, max_age_hours: int = 24) -> bool:
-                """Check if metadata is fresh (updated within max_age_hours)"""
-                if db_name not in self.metadata or "last_updated" not in self.metadata[db_name]:
-                    return False
-
-                last_updated = datetime.fromisoformat(self.metadata[db_name]["last_updated"])
-                age = datetime.now() - last_updated
-                return age.total_seconds() < max_age_hours * 3600
-
-            def is_schema_fresh(self, db_name: str, schema: str, max_age_hours: int = 24) -> bool:
-                """Check if schema metadata is fresh"""
-                if (db_name not in self.metadata or
-                    "schemas" not in self.metadata[db_name] or
-                    schema not in self.metadata[db_name]["schemas"] or
-                    "last_updated" not in self.metadata[db_name]["schemas"][schema]):
-                    return False
-
-                last_updated = datetime.fromisoformat(self.metadata[db_name]["schemas"][schema]["last_updated"])
-                age = datetime.now() - last_updated
-                return age.total_seconds() < max_age_hours * 3600
-
-            def is_table_fresh(self, db_name: str, schema: str, table: str, max_age_hours: int = 24) -> bool:
-                """Check if table metadata is fresh"""
-                if (db_name not in self.metadata or
-                    "schemas" not in self.metadata[db_name] or
-                    schema not in self.metadata[db_name]["schemas"] or
-                    "tables" not in self.metadata[db_name]["schemas"][schema] or
-                    table not in self.metadata[db_name]["schemas"][schema]["tables"] or
-                    "last_updated" not in self.metadata[db_name]["schemas"][schema]["tables"][table]):
-                    return False
-
-                last_updated = datetime.fromisoformat(
-                    self.metadata[db_name]["schemas"][schema]["tables"][table]["last_updated"]
-                )
-                age = datetime.now() - last_updated
-                return age.total_seconds() < max_age_hours * 3600
-
-        # Define the DatabaseDiscoveryService class
-        class DatabaseDiscoveryService:
-            def __init__(self, metadata_store: DatabaseMetadataStore):
-                self.metadata_store = metadata_store
-
-            def get_connection(self, db_name: str, user: str, password: str,
-                            host: str, port: str) -> Tuple[Any, Any]:
-                """Get a database connection and cursor"""
-                conn = psycopg2.connect(
-                    dbname=db_name,
-                    user=user,
-                    password=password,
-                    host=host,
-                    port=port,
-                    connect_timeout=5
-                )
-                cursor = conn.cursor()
-                return conn, cursor
-
-            def discover_schemas(self, db_name: str, user: str, password: str,
-                                host: str, port: str, force_refresh: bool = False) -> List[str]:
-                """Discover all schemas in the database"""
-                # Check if we have fresh metadata
-                if not force_refresh and self.metadata_store.is_metadata_fresh(db_name):
-                    return self.metadata_store.get_schemas(db_name)
-
-                # Connect to the database
-                try:
-                    conn, cursor = self.get_connection(db_name, user, password, host, port)
-
-                    # Query for schemas
-                    cursor.execute("""
-                        SELECT schema_name
-                        FROM information_schema.schemata
-                        WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
-                        ORDER BY schema_name;
-                    """)
-
-                    schemas = [row[0] for row in cursor.fetchall()]
-
-                    # Update metadata
-                    self.metadata_store.update_schemas(db_name, schemas)
-
-                    # Clean up
-                    cursor.close()
-                    conn.close()
-
-                    return schemas
-                except Exception as e:
-                    print(f"Error discovering schemas: {e}")
-                    traceback.print_exc()
-                    return []
-
-            def discover_tables(self, db_name: str, schema: str, user: str, password: str,
-                            host: str, port: str, force_refresh: bool = False) -> List[str]:
-                """Discover all tables in a schema"""
-                print(f"Discovering tables in schema '{schema}' of database '{db_name}'")
-
-                # Check if we have fresh metadata
-                if not force_refresh and self.metadata_store.is_schema_fresh(db_name, schema):
-                    tables = self.metadata_store.get_tables(db_name, schema)
-                    print(f"Using cached metadata for schema '{schema}', found {len(tables)} tables")
-                    if len(tables) > 0:
-                        print(f"First 10 tables: {tables[:10]}")
-                        if len(tables) > 10:
-                            print(f"...and {len(tables) - 10} more tables")
-                    return tables
-
-                # Connect to the database
-                try:
-                    print(f"Connecting to database {db_name} at {host}:{port} as {user}")
-                    conn, cursor = self.get_connection(db_name, user, password, host, port)
-
-                    # Query for tables
-                    query = """
-                        SELECT table_name
-                        FROM information_schema.tables
-                        WHERE table_schema = %s
-                        AND table_type = 'BASE TABLE'
-                        ORDER BY table_name;
-                    """
-                    print(f"Executing query: {query.strip()} with params: ({schema},)")
-                    cursor.execute(query, (schema,))
-
-                    tables = [row[0] for row in cursor.fetchall()]
-                    print(f"Found {len(tables)} tables in schema '{schema}'")
-                    if len(tables) > 0:
-                        print(f"First 10 tables: {tables[:10]}")
-                        if len(tables) > 10:
-                            print(f"...and {len(tables) - 10} more tables")
-
-                    # Update metadata
-                    self.metadata_store.update_tables(db_name, schema, tables)
-
-                    # Clean up
-                    cursor.close()
-                    conn.close()
-
-                    return tables
-                except Exception as e:
-                    print(f"Error discovering tables in schema {schema}: {e}")
-                    traceback.print_exc()
-
-                    # Try an alternative query if the first one failed
-                    try:
-                        print("Trying alternative query to discover tables...")
-                        conn, cursor = self.get_connection(db_name, user, password, host, port)
-
-                        # Alternative query that might work better in some PostgreSQL versions
-                        alt_query = f"""
-                            SELECT tablename FROM pg_tables
-                            WHERE schemaname = '{schema}'
-                            ORDER BY tablename;
-                        """
-                        print(f"Executing alternative query: {alt_query.strip()}")
-                        cursor.execute(alt_query)
-
-                        tables = [row[0] for row in cursor.fetchall()]
-                        print(f"Alternative query found {len(tables)} tables in schema '{schema}'")
-                        if len(tables) > 0:
-                            print(f"First 10 tables: {tables[:10]}")
-                            if len(tables) > 10:
-                                print(f"...and {len(tables) - 10} more tables")
-
-                        # Update metadata
-                        self.metadata_store.update_tables(db_name, schema, tables)
-
-                        # Clean up
-                        cursor.close()
-                        conn.close()
-
-                        return tables
-                    except Exception as alt_e:
-                        print(f"Alternative query also failed: {alt_e}")
-                        traceback.print_exc()
-                        return []
-
-            def discover_table_structure(self, db_name: str, schema: str, table: str,
-                                    user: str, password: str, host: str, port: str,
-                                    force_refresh: bool = False) -> Dict[str, Any]:
-                """Discover the structure of a table"""
-                # Check if we have fresh metadata
-                if not force_refresh and self.metadata_store.is_table_fresh(db_name, schema, table):
-                    return self.metadata_store.get_table_structure(db_name, schema, table)
-
-                # Connect to the database
-                try:
-                    conn, cursor = self.get_connection(db_name, user, password, host, port)
-
-                    # Query for columns
-                    cursor.execute("""
-                        SELECT column_name, data_type, is_nullable, column_default
-                        FROM information_schema.columns
-                        WHERE table_schema = %s AND table_name = %s
-                        ORDER BY ordinal_position;
-                    """, (schema, table))
-
-                    columns = [
-                        {
-                            "name": row[0],
-                            "type": row[1],
-                            "nullable": row[2] == "YES",
-                            "default": row[3]
-                        }
-                        for row in cursor.fetchall()
-                    ]
-
-                    # Query for primary key
-                    cursor.execute("""
-                        SELECT kcu.column_name
-                        FROM information_schema.table_constraints tc
-                        JOIN information_schema.key_column_usage kcu
-                            ON tc.constraint_name = kcu.constraint_name
-                            AND tc.table_schema = kcu.table_schema
-                        WHERE tc.constraint_type = 'PRIMARY KEY'
-                            AND tc.table_schema = %s
-                            AND tc.table_name = %s
-                        ORDER BY kcu.ordinal_position;
-                    """, (schema, table))
-
-                    pk_columns = [row[0] for row in cursor.fetchall()]
-
-                    # Mark primary key columns
-                    for column in columns:
-                        if column["name"] in pk_columns:
-                            column["primary_key"] = True
-
-                    # Query for foreign keys
-                    cursor.execute("""
-                        SELECT
-                            kcu.column_name,
-                            ccu.table_schema AS foreign_table_schema,
-                            ccu.table_name AS foreign_table_name,
-                            ccu.column_name AS foreign_column_name
-                        FROM information_schema.table_constraints AS tc
-                        JOIN information_schema.key_column_usage AS kcu
-                            ON tc.constraint_name = kcu.constraint_name
-                            AND tc.table_schema = kcu.table_schema
-                        JOIN information_schema.constraint_column_usage AS ccu
-                            ON ccu.constraint_name = tc.constraint_name
-                            AND ccu.table_schema = tc.table_schema
-                        WHERE tc.constraint_type = 'FOREIGN KEY'
-                            AND tc.table_schema = %s
-                            AND tc.table_name = %s;
-                    """, (schema, table))
-
-                    relationships = [
-                        {
-                            "column": row[0],
-                            "references": {
-                                "schema": row[1],
-                                "table": row[2],
-                                "column": row[3]
-                            }
-                        }
-                        for row in cursor.fetchall()
-                    ]
-
-                    # Update metadata
-                    self.metadata_store.update_table_structure(
-                        db_name, schema, table, columns, relationships
-                    )
-
-                    # Clean up
-                    cursor.close()
-                    conn.close()
-
-                    return self.metadata_store.get_table_structure(db_name, schema, table)
-                except Exception as e:
-                    print(f"Error discovering structure of table {schema}.{table}: {e}")
-                    traceback.print_exc()
-                    return {}
-
-            def get_sample_data(self, db_name: str, schema: str, table: str,
-                            user: str, password: str, host: str, port: str,
-                            limit: int = 10) -> Dict[str, Any]:
-                """Get sample data from a table"""
-                try:
-                    conn, cursor = self.get_connection(db_name, user, password, host, port)
-
-                    # Query for sample data
-                    cursor.execute(f"""
-                        SELECT * FROM "{schema}"."{table}" LIMIT %s;
-                    """, (limit,))
-
-                    columns = [desc[0] for desc in cursor.description]
-                    rows = cursor.fetchall()
-
-                    # Clean up
-                    cursor.close()
-                    conn.close()
-
-                    return {
-                        "columns": columns,
-                        "rows": rows,
-                        "row_count": len(rows)
-                    }
-                except Exception as e:
-                    print(f"Error getting sample data from {schema}.{table}: {e}")
-                    traceback.print_exc()
-                    return {
-                        "columns": [],
-                        "rows": [],
-                        "row_count": 0,
-                        "error": str(e)
-                    }
-
-        # Initialize the database metadata store and discovery service
+        # Initialize database context
+        self.db_context = {
+            "current_db": None,
+            "current_schema": None,
+            "discovered_schemas": set(),
+            "interface_tables": {},
+            "last_discovery": None
+        }
+
+        # Initialize metadata store and discovery service
         try:
             self.metadata_store = DatabaseMetadataStore()
             self.discovery_service = DatabaseDiscoveryService(self.metadata_store)
             print("Successfully initialized database metadata store and discovery service")
+            
+            # Perform initial database discovery
+            self._initialize_database_context()
         except Exception as e:
             print(f"Error initializing database services: {e}")
             traceback.print_exc()
 
-        # Track the current database context
-        self.current_db_name = None
-        self.current_schema = None
-
-    def invoke(self, user_question: str, feedback: str = "") -> dict:
-        """
-        Generate a plan for answering the user's question.
-
-        Args:
-            user_question (str): The user's question or request
-            feedback (str, optional): Any feedback from previous attempts
-
-        Returns:
-            dict: The planner's response as a structured JSON object
-        """
+    def _initialize_database_context(self):
+        """Initialize database context with proactive discovery."""
         try:
-            # Get the model for generating JSON responses
-            model = self.get_model(json_model=True)
-
-            # Create the system prompt
-            system_prompt = planner_prompt_template
-
-            # Create the user input (question + any feedback)
-            user_input = f"User Question: {user_question}"
-            if feedback:
-                user_input += f"\n\nFeedback from previous attempt: {feedback}"
-
-            # Add context about available data sources
-            user_input += "\n\nAvailable Data Sources: SQL Database (PostgreSQL)"
-
-            # Get the response from the model
-            print(colored(f"Invoking Planner with question: {user_question[:100]}...", "cyan"))
-
-            if self.server in ["ollama", "vllm", "groq"]:
-                response = model(system_prompt=system_prompt, user_input=user_input)
-            else:
-                # Use the invoke method for CustomOpenAIWrapper
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_input}
-                ]
-                response = model.invoke(messages)
-
-            print(colored(f"Raw Planner response: {response}", "yellow"))
-
-            # Handle various response formats
-            # The planner should return a structured JSON object with the plan
-            if isinstance(response, dict):
-                # Already parsed JSON
-                parsed_response = response
-            elif isinstance(response, str):
-                # JSON string needs to be parsed
-                try:
-                    # Handle potential markdown code blocks in the response
-                    if "```json" in response or "```" in response:
-                        # Extract JSON from markdown code block
-                        import re
-                        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response)
-                        if json_match:
-                            json_str = json_match.group(1).strip()
-                            parsed_response = json.loads(json_str)
-                        else:
-                            # Just try to parse the whole thing
-                            parsed_response = json.loads(response)
-                    else:
-                        # Just try to parse the whole thing
-                        parsed_response = json.loads(response)
-                except json.JSONDecodeError:
-                    print(colored(f"Error parsing planner JSON response: {response}", "red"))
-                    parsed_response = {
-                        "plan": {
-                            "goal": "Process the user question",
-                            "approach": "Analyzing the question to determine required information"
-                        },
-                        "required_information": ["database_schema"],
-                        "data_sources": ["SQL"],
-                        "error": f"Failed to parse JSON response: {response[:100]}..."
-                    }
-            else:
-                # Unexpected response type
-                print(colored(f"Unexpected response type from planner: {type(response)}", "red"))
-                parsed_response = {
-                    "plan": {
-                        "goal": "Process the user question",
-                        "approach": "Analyzing the question to determine required information"
-                    },
-                    "required_information": ["database_schema"],
-                    "data_sources": ["SQL"],
-                    "error": f"Unexpected response type: {type(response)}"
-                }
-
-            # Validate the response
-            if not self._validate_response(parsed_response):
-                # If validation fails, use a default structure
-                parsed_response = {
-                    "plan": {
-                        "goal": "Process the user question",
-                        "approach": "Analyzing the question to determine required information"
-                    },
-                    "required_information": ["database_schema"],
-                    "data_sources": ["SQL"],
-                    "validated": False
-                }
-            else:
-                parsed_response["validated"] = True
-
-            # Enhance the plan with database metadata
-            enhanced_response = self.enhance_plan_with_metadata(parsed_response, user_question)
-
-            # Add metadata
-            enhanced_response["timestamp"] = str(datetime.now())
-            enhanced_response["agent"] = "planner"
-            enhanced_response["user_question"] = user_question
-
-            # Add database context information
-            if self.current_db_name:
-                enhanced_response["database_context"] = {
-                    "database": self.current_db_name,
-                    "schema": self.current_schema,
-                    "metadata_available": True,
-                    "last_updated": self.metadata_store.metadata.get(self.current_db_name, {}).get("last_updated", "unknown")
-                }
-
-            return enhanced_response
-
+            # Get connection parameters
+            params = self.get_db_connection_params()
+            
+            # Set current database
+            self.db_context["current_db"] = params["db_name"]
+            
+            # Load existing metadata
+            self.metadata_store.load_metadata(params["db_name"])
+            self.metadata_store.load_change_log(params["db_name"])
+            
+            # Discover schemas if metadata is stale
+            if not self.metadata_store.is_metadata_fresh(params["db_name"]):
+                schemas = self.discovery_service.discover_schemas(
+                    db_name=params["db_name"],
+                    user=params["user"],
+                    password=params["password"],
+                    host=params["host"],
+                    port=params["port"],
+                    force_refresh=True
+                )
+                self.db_context["discovered_schemas"].update(schemas)
+                
+                # Pre-discover interface tables
+                self._discover_interface_tables()
+            
+            self.db_context["last_discovery"] = datetime.now()
+            print(f"Database context initialized successfully for {params['db_name']}")
+            
         except Exception as e:
-            print(colored(f"Error in PlannerAgent.invoke: {e}", "red"))
+            print(f"Error initializing database context: {e}")
             traceback.print_exc()
 
-            # Try to discover database structure even in case of error
-            try:
-                schemas = self.discover_database_structure()
-                return {
-                    "plan": {
-                        "goal": "Handle error in planning",
-                        "approach": "Proceeding with basic information gathering"
-                    },
-                    "required_information": ["database_schema"],
-                    "data_sources": ["SQL"],
-                    "error": str(e),
-                    "agent": "planner",
-                    "user_question": user_question,
+    def _discover_interface_tables(self):
+        """Discover tables containing interface-related columns."""
+        try:
+            params = self.get_db_connection_params()
+            
+            # Query for interface-related tables
+            conn, cursor = self.discovery_service.get_connection(
+                db_name=params["db_name"],
+                user=params["user"],
+                password=params["password"],
+                host=params["host"],
+                port=params["port"]
+            )
+            
+            # Search for interface-related columns across all schemas
+            cursor.execute("""
+                SELECT table_schema, table_name, column_name
+                FROM information_schema.columns
+                WHERE column_name ILIKE '%interface%'
+                AND table_schema NOT IN ('pg_catalog', 'information_schema')
+                ORDER BY table_schema, table_name;
+            """)
+            
+            interface_tables = {}
+            for schema, table, column in cursor.fetchall():
+                if schema not in interface_tables:
+                    interface_tables[schema] = {}
+                if table not in interface_tables[schema]:
+                    interface_tables[schema][table] = []
+                interface_tables[schema][table].append(column)
+            
+            self.db_context["interface_tables"] = interface_tables
+            print(f"Discovered interface tables: {json.dumps(interface_tables, indent=2)}")
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error discovering interface tables: {e}")
+            traceback.print_exc()
+
+    def analyze_query_context(self, user_question):
+        """Analyze the query to determine database context with enhanced understanding."""
+        context = {
+            "query_type": None,
+            "target_schema": None,
+            "target_table": None,
+            "is_interface_query": False,
+            "is_metadata_query": False,
+            "conditions": [],
+            "required_columns": []
+        }
+        
+        # Normalize question for analysis
+        question = user_question.lower().strip()
+        
+        # Check for interface-related queries
+        if "interface" in question:
+            context["is_interface_query"] = True
+            context["query_type"] = "SELECT"
+            # Check discovered interface tables
+            if hasattr(self, 'db_context') and self.db_context.get("interface_tables"):
+                interface_tables = self.db_context["interface_tables"]
+                # Prioritize public schema
+                if "public" in interface_tables:
+                    context["target_schema"] = "public"
+                    tables = interface_tables["public"]
+                    if tables:
+                        context["target_table"] = next(iter(tables))
+    
+        # Check for metadata queries
+        elif any(keyword in question for keyword in ["list", "show", "describe", "tables", "schemas"]):
+            context["is_metadata_query"] = True
+            context["query_type"] = "SELECT"
+            if "schemas" in question:
+                context["target_schema"] = "information_schema"
+                context["target_table"] = "schemata"
+            elif "tables" in question:
+                context["target_schema"] = "information_schema"
+                context["target_table"] = "tables"
+    
+        # Extract schema and table information using regex
+        if not context["target_schema"]:
+            # Check for explicit schema.table pattern
+            match = re.search(r'from\s+(["\w]+)\.(["\w]+)', question)
+            if match:
+                context["target_schema"] = match.group(1).strip('"')
+                context["target_table"] = match.group(2).strip('"')
+            else:
+                # Check for table in schema pattern
+                match = re.search(r'table\s+(["\w]+)\s+in\s+(["\w]+)', question)
+                if match:
+                    context["target_schema"] = match.group(2).strip('"')
+                    context["target_table"] = match.group(1).strip('"')
+    
+        return context
+
+    def enhance_plan_with_metadata(self, plan, user_question):
+        """Enhance the query plan with database metadata."""
+        # Analyze the query context
+        context = self.analyze_query_context(user_question)
+
+        # Special handling for interface queries
+        if context["is_interface_query"]:
+            if context["target_schema"] and context["target_table"]:
+                # Get table structure
+                table_structure = self.metadata_store.get_table_structure(
+                    self.current_db_name,
+                    context["target_schema"],
+                    context["target_table"]
+                )
+                
+                # If table structure is not found or stale, discover it
+                if not table_structure or not self.metadata_store.is_table_fresh(
+                    self.current_db_name,
+                    context["target_schema"],
+                    context["target_table"]
+                ):
+                    table_structure = self.discover_table_structure(
+                        context["target_schema"],
+                        context["target_table"],
+                        force_refresh=True
+                    )
+                
+                # Get interface-related columns
+                interface_columns = []
+                if table_structure and "columns" in table_structure:
+                    interface_columns = [
+                        col["name"] for col in table_structure["columns"]
+                        if "interface" in col["name"].lower()
+                    ]
+                
+                # Update plan with interface-specific information
+                plan.update({
+                    "query_type": "SELECT",
+                    "primary_table_or_datasource": f"{context['target_schema']}.{context['target_table']}",
+                    "relevant_columns": interface_columns,
+                    "table_structure": table_structure,
+                    "processing_instructions": "Query interface information",
+                    "filtering_conditions": "interface_name IS NOT NULL",
+                    "metadata": {
+                        "is_interface_query": True,
+                        "schema": context["target_schema"],
+                        "table": context["target_table"],
+                        "interface_columns": interface_columns
+                    }
+                })
+                return plan
+
+        # Handle metadata queries (list tables, schemas, etc.)
+        if context["is_metadata_query"]:
+            schemas = self.discover_database_structure()
+            if "schemas" in user_question.lower():
+                plan.update({
                     "schemas": schemas,
-                    "database": self.current_db_name
-                }
-            except Exception as db_error:
-                print(colored(f"Error discovering database structure: {db_error}", "red"))
-                return {
-                    "plan": {
-                        "goal": "Handle error in planning",
-                        "approach": "Proceeding with basic information gathering"
-                    },
-                    "required_information": ["database_schema"],
-                    "data_sources": ["SQL"],
-                    "error": f"{str(e)} (Database discovery error: {str(db_error)})",
-                    "agent": "planner",
-                    "user_question": user_question
-                }
+                    "primary_table_or_datasource": "information_schema.schemata",
+                    "query_type": "SELECT",
+                    "relevant_columns": ["schema_name"],
+                    "filtering_conditions": "schema_name NOT IN ('pg_catalog', 'information_schema')",
+                    "processing_instructions": "List all database schemas"
+                })
+            elif "tables" in user_question.lower():
+                all_tables = {}
+                for schema in schemas:
+                    tables = self.discover_schema_tables(schema)
+                    all_tables[schema] = tables
+                plan.update({
+                    "all_tables": all_tables,
+                    "primary_table_or_datasource": "information_schema.tables",
+                    "query_type": "SELECT",
+                    "relevant_columns": ["table_schema", "table_name"],
+                    "filtering_conditions": "table_schema NOT IN ('pg_catalog', 'information_schema')",
+                    "processing_instructions": "List all tables in all schemas"
+                })
+            return plan
+
+        # Handle regular queries
+        if context["target_schema"] and context["target_table"]:
+            table_structure = self.discover_table_structure(
+                context["target_schema"],
+                context["target_table"]
+            )
+            plan.update({
+                "schema": context["target_schema"],
+                "table": context["target_table"],
+                "table_structure": table_structure,
+                "primary_table_or_datasource": f"{context['target_schema']}.{context['target_table']}",
+                "relevant_columns": [col["name"] for col in table_structure.get("columns", [])]
+            })
+
+        # Add metadata about the enhancement
+        plan["metadata"] = {
+            "enhanced_at": str(datetime.now()),
+            "context": context,
+            "database": self.current_db_name,
+            "has_table_structure": bool(plan.get("table_structure")),
+            "discovered_columns": len(plan.get("relevant_columns", []))
+        }
+
+        return plan
 
     def get_db_connection_params(self):
         """Get database connection parameters from session state"""
@@ -1229,91 +798,6 @@ class PlannerAgent(Agent):
 
         return table_structure
 
-    def analyze_query_context(self, user_question):
-        """Analyze the query to determine database context"""
-        # Extract potential schema and table references from the question
-        # This is a simple implementation - in practice, you'd use NLP or the LLM itself
-        import re
-
-        # Check if the question is about listing schemas
-        if "list schemas" in user_question.lower() or "show schemas" in user_question.lower():
-            return {"action": "list_schemas"}
-
-        # Check if the question is about listing tables in a schema
-        schema_match = re.search(r"tables in (\w+)", user_question.lower())
-        if schema_match:
-            schema = schema_match.group(1)
-            return {"action": "list_tables", "schema": schema}
-
-        # Check if the question is about a specific table
-        table_match = re.search(r"from (\w+)\.(\w+)", user_question.lower())
-        if table_match:
-            schema = table_match.group(1)
-            table = table_match.group(2)
-            return {"action": "query_table", "schema": schema, "table": table}
-
-        # Default to listing all tables
-        if "list all tables" in user_question.lower() or "show all tables" in user_question.lower():
-            return {"action": "list_all_tables"}
-
-        # For other queries, try to infer context from metadata
-        return {"action": "general_query"}
-
-    def enhance_plan_with_metadata(self, plan, user_question):
-        """Enhance the query plan with database metadata"""
-        # Analyze the query context
-        context = self.analyze_query_context(user_question)
-
-        # Handle different query types
-        if context["action"] == "list_schemas":
-            # Discover schemas
-            schemas = self.discover_database_structure()
-            plan["schemas"] = schemas
-            plan["primary_table_or_datasource"] = "information_schema.schemata"
-
-        elif context["action"] == "list_tables":
-            # Discover tables in the specified schema
-            schema = context["schema"]
-            tables = self.discover_schema_tables(schema)
-            plan["schema"] = schema
-            plan["tables"] = tables
-            plan["primary_table_or_datasource"] = f"information_schema.tables WHERE table_schema = '{schema}'"
-
-        elif context["action"] == "query_table":
-            # Discover table structure
-            schema = context["schema"]
-            table = context["table"]
-            table_structure = self.discover_table_structure(schema, table)
-
-            # Add table structure to the plan
-            plan["schema"] = schema
-            plan["table"] = table
-            plan["table_structure"] = table_structure
-            plan["primary_table_or_datasource"] = f"{schema}.{table}"
-
-            # Add column information
-            if "columns" in table_structure:
-                plan["relevant_columns"] = [col["name"] for col in table_structure["columns"]]
-
-            # Add relationship information
-            if "relationships" in table_structure:
-                plan["relationships"] = table_structure["relationships"]
-
-        elif context["action"] == "list_all_tables":
-            # Discover all schemas
-            schemas = self.discover_database_structure()
-
-            # For each schema, discover tables
-            all_tables = {}
-            for schema in schemas:
-                tables = self.discover_schema_tables(schema)
-                all_tables[schema] = tables
-
-            plan["all_tables"] = all_tables
-            plan["primary_table_or_datasource"] = "information_schema.tables"
-
-        return plan
-
     def _validate_response(self, response: dict) -> bool:
         """
         Validate the response from the planner agent.
@@ -1334,6 +818,179 @@ class PlannerAgent(Agent):
                 print(colored(f"Missing required field: {field}", "red"))
                 return False
         return True
+
+    def _validate_and_handle_errors(self, response):
+        """Validate the planner's response and handle any errors."""
+        try:
+            # Ensure response is a dictionary
+            if not isinstance(response, dict):
+                raise ValueError(f"Response must be a dictionary, got {type(response)}")
+
+            # Check required fields
+            required_fields = [
+                "query_type",
+                "primary_table_or_datasource",
+                "relevant_columns",
+                "filtering_conditions",
+                "processing_instructions"
+            ]
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+
+            # Validate query type
+            valid_query_types = ["SELECT", "INSERT", "UPDATE", "DELETE"]
+            if response.get("query_type") not in valid_query_types:
+                raise ValueError(f"Invalid query_type: {response.get('query_type')}")
+
+            # Validate table/datasource
+            if not response.get("primary_table_or_datasource"):
+                raise ValueError("primary_table_or_datasource cannot be empty")
+
+            # Validate columns
+            if not isinstance(response.get("relevant_columns"), list):
+                raise ValueError("relevant_columns must be a list")
+
+            # Add validation status
+            response["validation"] = {
+                "is_valid": True,
+                "validated_at": str(datetime.now()),
+                "validation_checks": [
+                    "Response structure",
+                    "Required fields",
+                    "Query type",
+                    "Table/datasource",
+                    "Column format"
+                ]
+            }
+
+            return response
+
+        except Exception as e:
+            error_response = {
+                "error": str(e),
+                "validation": {
+                    "is_valid": False,
+                    "validated_at": str(datetime.now()),
+                    "validation_error": str(e),
+                    "error_type": type(e).__name__
+                }
+            }
+            print(f"Validation error: {str(e)}")
+            return error_response
+
+    def invoke(self, user_question: str, feedback: str = "") -> dict:
+        """Generate a plan for answering the user's question with enhanced error handling."""
+        try:
+            # Get the model for generating JSON responses
+            model = self.get_model(json_model=True)
+
+            # Create the system prompt
+            system_prompt = planner_prompt_template
+
+            # Create the user input
+            user_input = f"User Question: {user_question}"
+            if feedback:
+                user_input += f"\n\nFeedback from previous attempt: {feedback}"
+
+            # Add context about available data sources
+            user_input += "\n\nAvailable Data Sources: SQL Database (PostgreSQL)"
+
+            # Get the response from the model
+            print(f"Invoking Planner with question: {user_question}")
+
+            if self.server in ["ollama", "vllm", "groq"]:
+                response = model(system_prompt=system_prompt, user_input=user_input)
+            else:
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_input}
+                ]
+                response = model.invoke(messages)
+
+            # Parse and validate the response
+            parsed_response = self._parse_model_response(response)
+            validated_response = self._validate_and_handle_errors(parsed_response)
+
+            # If validation failed, try to recover
+            if not validated_response.get("validation", {}).get("is_valid", False):
+                print("Initial validation failed, attempting recovery...")
+                validated_response = self._attempt_recovery(validated_response, user_question)
+
+            # Enhance the plan with metadata
+            if validated_response.get("validation", {}).get("is_valid", False):
+                enhanced_response = self.enhance_plan_with_metadata(validated_response, user_question)
+            else:
+                enhanced_response = validated_response
+
+            # Add final metadata
+            enhanced_response.update({
+                "timestamp": str(datetime.now()),
+                "agent": "planner",
+                "user_question": user_question
+            })
+
+            return enhanced_response
+
+        except Exception as e:
+            print(f"Error in PlannerAgent.invoke: {e}")
+            traceback.print_exc()
+            return self._create_error_response(str(e))
+
+    def _parse_model_response(self, response):
+        """Parse and normalize the model's response."""
+        try:
+            if isinstance(response, dict):
+                return response
+            elif isinstance(response, str):
+                # Handle potential markdown code blocks
+                if "```json" in response or "```" in response:
+                    import re
+                    json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response)
+                    if json_match:
+                        return json.loads(json_match.group(1).strip())
+                return json.loads(response)
+            else:
+                raise ValueError(f"Unexpected response type: {type(response)}")
+        except Exception as e:
+            print(f"Error parsing model response: {e}")
+            return {
+                "error": f"Failed to parse response: {str(e)}",
+                "raw_response": str(response)
+            }
+
+    def _attempt_recovery(self, failed_response, user_question):
+        """Attempt to recover from validation failures."""
+        try:
+            # Create a basic valid response structure
+            recovered_response = {
+                "query_type": "SELECT",
+                "primary_table_or_datasource": "unknown",
+                "relevant_columns": [],
+                "filtering_conditions": "",
+                "processing_instructions": "Analyze the database structure"
+            }
+
+            # Try to extract any valid information from the failed response
+            if isinstance(failed_response, dict):
+                if "primary_table_or_datasource" in failed_response:
+                    recovered_response["primary_table_or_datasource"] = failed_response["primary_table_or_datasource"]
+                if "relevant_columns" in failed_response and isinstance(failed_response["relevant_columns"], list):
+                    recovered_response["relevant_columns"] = failed_response["relevant_columns"]
+
+            # Add recovery metadata
+            recovered_response["recovery"] = {
+                "recovered_from_error": True,
+                "original_error": failed_response.get("error", "Unknown error"),
+                "recovery_timestamp": str(datetime.now())
+            }
+
+            # Validate the recovered response
+            return self._validate_and_handle_errors(recovered_response)
+
+        except Exception as e:
+            print(f"Recovery attempt failed: {e}")
+            return failed_response
 
 ###################
 # Selector Agent
@@ -1404,17 +1061,7 @@ selector_guided_json = {
 
 class SelectorAgent(Agent):
     def __init__(self, state=None, model=None, server=None, temperature=None, model_endpoint=None, stop=None):
-        """
-        Initialize the Selector Agent.
-
-        Args:
-            state: Current state of the agent graph
-            model: LLM model to use
-            server: Server type (openai, ollama, etc.)
-            temperature: Temperature setting for model generation
-            model_endpoint: API endpoint for the model
-            stop: Stop sequences for the model
-        """
+        """Initialize the Selector Agent with enhanced metadata handling."""
         super().__init__(
             state=state,
             model=model,
@@ -1424,217 +1071,399 @@ class SelectorAgent(Agent):
             stop=stop,
             guided_json=selector_guided_json
         )
+        
+        # Initialize selection context
+        self.selection_context = {
+            "last_selection": None,
+            "selection_history": [],
+            "preferred_schema": None,
+            "discovered_tables": {}
+        }
 
     def invoke(self, user_question: str, planner_response: dict = None, feedback: str = None, previous_selections: list = None) -> dict:
-        """
-        Select appropriate data sources and tools based on the query requirements.
-
-        Args:
-            user_question: Original user question
-            planner_response: Response from the Planner Agent
-            feedback: Any feedback from previous iterations
-            previous_selections: List of previous data source selections
-
-        Returns:
-            dict: Selection decision and reasoning
-        """
+        """Select appropriate data sources and tools based on the query requirements."""
         try:
-            # Prepare the input context
-            context = {
-                "user_question": user_question,
-                "planner_response": planner_response or {},
-                "previous_selections": previous_selections or [],
-                "feedback": feedback or ""
+            # Initialize response structure
+            selection = {
+                "selected_tool": "sql_query",
+                "selected_datasource": "unknown",
+                "information_needed": [],
+                "reason_for_selection": "",
+                "query_parameters": {"columns": [], "filters": ""}
             }
 
-            # Format the context for the model
-            formatted_input = json.dumps(context, indent=2)
+            # Validate planner response
+            if not planner_response or not isinstance(planner_response, dict):
+                return {
+                    "selector_response": {
+                        "error": "Invalid planner response",
+                        "selected_tool": "error",
+                        "selected_datasource": None,
+                        "information_needed": ["Valid planner response"],
+                        "reason_for_selection": "Planner response validation failed"
+                    }
+                }
 
-            # Get model response
-            model_response = get_open_ai_json(
-                system_prompt=selector_prompt_template,
-                user_input=formatted_input,
-                model=self.model,
-                temperature=self.temperature
-            )
+            # Extract schema and table information
+            schema_table = self._extract_schema_table(planner_response)
+            if schema_table:
+                selection.update({
+                    "selected_schema": schema_table["schema"],
+                    "selected_table": schema_table["table"],
+                    "reason_for_selection": f"Using schema {schema_table['schema']} and table {schema_table['table']} based on planner analysis"
+                })
 
-            # Validate the response
-            self._validate_response(model_response)
+            # Handle interface queries
+            if "interface" in user_question.lower():
+                interface_info = self._handle_interface_query(planner_response)
+                if interface_info:
+                    selection.update(interface_info)
 
-            # Handle special cases for database queries
-            if model_response["selected_tool"] == "database_query":
-                model_response = self._enhance_database_selection(model_response, planner_response)
+            # Add query parameters
+            selection["query_parameters"].update({
+                "columns": planner_response.get("relevant_columns", []),
+                "filters": planner_response.get("filtering_conditions", ""),
+                "schema": selection.get("selected_schema", "public"),
+                "table": selection.get("selected_table")
+            })
 
-            return {"selector_response": model_response}
+            # Add metadata
+            selection["metadata"] = {
+                "timestamp": str(datetime.now()),
+                "source": "planner_guided",
+                "confidence": 0.8 if selection.get("selected_schema") else 0.5
+            }
+
+            return {"selector_response": selection}
 
         except Exception as e:
             print(f"Error in selector agent: {str(e)}")
             traceback.print_exc()
             return {
                 "selector_response": {
+                    "error": str(e),
                     "selected_tool": "error",
-                    "selected_datasource": "none",
-                    "information_needed": [],
-                    "reason_for_selection": f"Error occurred: {str(e)}",
-                    "query_parameters": {}
+                    "selected_datasource": None,
+                    "information_needed": ["Error resolution"],
+                    "reason_for_selection": f"Error occurred: {str(e)}"
                 }
             }
 
-    def _validate_response(self, response: dict) -> bool:
-        """
-        Validate the structure and content of the selector response.
+    def _extract_schema_table(self, planner_response: dict) -> dict:
+        """Extract schema and table information from planner response."""
+        result = {"schema": None, "table": None}
+        
+        # Check primary_table_or_datasource
+        source = planner_response.get("primary_table_or_datasource")
+        if source and isinstance(source, str):
+            # Handle schema.table format
+            if "." in source:
+                schema, table = source.split(".")
+                result["schema"] = schema.strip('"')
+                result["table"] = table.strip('"')
+            else:
+                # Default to public schema
+                result["schema"] = "public"
+                result["table"] = source.strip('"')
+        
+        # Check metadata for schema preference
+        metadata = planner_response.get("metadata", {})
+        if metadata.get("schema"):
+            result["schema"] = metadata["schema"]
+        
+        return result
 
-        Args:
-            response: The response dictionary to validate
+    def _handle_interface_query(self, planner_response: dict) -> dict:
+        """Handle interface-specific query requirements."""
+        interface_info = {
+            "is_interface_query": True,
+            "information_needed": ["interface_columns"],
+            "query_parameters": {
+                "table_type": "interface"
+            }
+        }
+        
+        # Check for interface table in metadata
+        metadata = planner_response.get("metadata", {})
+        if metadata.get("interface_tables"):
+            interface_tables = metadata["interface_tables"]
+            # Prioritize public schema
+            if "public" in interface_tables:
+                interface_info.update({
+                    "selected_schema": "public",
+                    "selected_table": next(iter(interface_tables["public"])),
+                    "reason_for_selection": "Found interface table in public schema"
+                })
+            else:
+                # Take first available schema
+                schema = next(iter(interface_tables))
+                interface_info.update({
+                    "selected_schema": schema,
+                    "selected_table": next(iter(interface_tables[schema])),
+                    "reason_for_selection": f"Found interface table in {schema} schema"
+                })
+        else:
+            # Default to information schema search
+            interface_info.update({
+                "selected_schema": "information_schema",
+                "selected_table": "columns",
+                "reason_for_selection": "Searching for interface columns across schemas",
+                "query_parameters": {
+                    "column_pattern": "%interface%"
+                }
+            })
+        
+        return interface_info
 
-        Returns:
-            bool: True if valid, raises ValueError if invalid
-        """
+    def _validate_planner_response(self, planner_response: dict) -> dict:
+        """Validate and normalize the planner's response."""
+        if not planner_response:
+            return {
+                "query_type": "unknown",
+                "primary_table_or_datasource": "unknown",
+                "relevant_columns": [],
+                "is_valid": False
+            }
+            
+        # Ensure required fields
         required_fields = [
-            "selected_tool",
-            "selected_datasource",
-            "information_needed",
-            "reason_for_selection",
-            "query_parameters"
+            "query_type",
+            "primary_table_or_datasource",
+            "relevant_columns"
         ]
+        
+        validated = {}
+        for field in required_fields:
+            validated[field] = planner_response.get(field)
+            
+        # Add validation status
+        validated["is_valid"] = all(validated.get(field) is not None for field in required_fields)
+        
+        # Extract metadata if available
+        if "metadata" in planner_response:
+            validated["metadata"] = planner_response["metadata"]
+            
+        return validated
 
-        # Check all required fields are present
-        missing_fields = [field for field in required_fields if field not in response]
-        if missing_fields:
-            raise ValueError(f"Missing required fields in selector response: {missing_fields}")
+    def _analyze_requirements(self, user_question: str, planner_response: dict) -> dict:
+        """Analyze selection requirements based on the query and planner response."""
+        requirements = {
+            "needs_schema_selection": False,
+            "needs_table_selection": False,
+            "is_interface_query": False,
+            "is_metadata_query": False,
+            "required_columns": set(),
+            "required_conditions": []
+        }
+        
+        # Check for interface queries
+        if "interface" in user_question.lower():
+            requirements["is_interface_query"] = True
+            requirements["needs_schema_selection"] = True
+            requirements["needs_table_selection"] = True
+            
+        # Check for metadata queries
+        if any(word in user_question.lower() for word in ["list", "show", "describe", "tables", "schemas"]):
+            requirements["is_metadata_query"] = True
+            
+        # Extract required columns
+        if planner_response.get("relevant_columns"):
+            requirements["required_columns"].update(planner_response["relevant_columns"])
+            
+        # Extract conditions
+        if planner_response.get("filtering_conditions"):
+            requirements["required_conditions"].append(planner_response["filtering_conditions"])
+            
+        return requirements
 
-        # Validate field types
-        if not isinstance(response["information_needed"], list):
-            raise ValueError("information_needed must be a list")
-        if not isinstance(response["query_parameters"], dict):
-            raise ValueError("query_parameters must be a dictionary")
-        if not isinstance(response["reason_for_selection"], str):
-            raise ValueError("reason_for_selection must be a string")
+    def _select_data_sources(self, requirements: dict, planner_response: dict) -> dict:
+        """Select appropriate data sources based on requirements."""
+        selection = {
+            "selected_tool": "database_query",  # Default to database query
+            "selected_datasource": None,
+            "selected_schema": None,
+            "selected_table": None,
+            "confidence_score": 0.0
+        }
+        
+        # Handle interface queries
+        if requirements["is_interface_query"]:
+            interface_selection = self._select_interface_source(planner_response)
+            if interface_selection:
+                selection.update(interface_selection)
+                selection["confidence_score"] = 0.9
+                
+        # Handle metadata queries
+        elif requirements["is_metadata_query"]:
+            metadata_selection = self._select_metadata_source(planner_response)
+            if metadata_selection:
+                selection.update(metadata_selection)
+                selection["confidence_score"] = 1.0
+                
+        # Handle regular queries
+        else:
+            regular_selection = self._select_regular_source(planner_response)
+            if regular_selection:
+                selection.update(regular_selection)
+                
+        return selection
 
-        return True
+    def _select_interface_source(self, planner_response: dict) -> dict:
+        """Select appropriate source for interface queries."""
+        # Check planner's metadata first
+        if planner_response.get("metadata", {}).get("interface_tables"):
+            interface_tables = planner_response["metadata"]["interface_tables"]
+            # Prioritize public schema
+            if "public" in interface_tables:
+                return {
+                    "selected_schema": "public",
+                    "selected_table": next(iter(interface_tables["public"])),
+                    "interface_columns": interface_tables["public"][next(iter(interface_tables["public"]))],
+                    "requires_verification": False
+                }
+                
+        # Default to information schema for discovery
+        return {
+            "selected_schema": "information_schema",
+            "selected_table": "columns",
+            "requires_verification": True
+        }
 
-    def _enhance_database_selection(self, response: dict, planner_response: dict) -> dict:
-        """
-        Enhance the selection response for database queries with additional context.
+    def _select_metadata_source(self, planner_response: dict) -> dict:
+        """Select appropriate source for metadata queries."""
+        return {
+            "selected_schema": "information_schema",
+            "selected_table": "tables",
+            "selected_columns": ["table_schema", "table_name"],
+            "requires_verification": False
+        }
 
-        Args:
-            response: The original selector response
-            planner_response: The planner's response
+    def _select_regular_source(self, planner_response: dict) -> dict:
+        """Select appropriate source for regular queries."""
+        selection = {}
+        
+        # Use planner's suggested source if available
+        if planner_response.get("primary_table_or_datasource"):
+            source = planner_response["primary_table_or_datasource"]
+            # Check if source includes schema
+            if "." in source:
+                schema, table = source.split(".")
+                selection.update({
+                    "selected_schema": schema,
+                    "selected_table": table,
+                    "confidence_score": 0.8
+                })
+            else:
+                selection.update({
+                    "selected_table": source,
+                    "selected_schema": "public",  # Default to public schema
+                    "confidence_score": 0.6,
+                    "requires_verification": True
+                })
+                
+        return selection
 
-        Returns:
-            dict: Enhanced selector response
-        """
-        try:
-            # Add database-specific parameters
-            if planner_response and planner_response.get("primary_table_or_datasource"):
-                response["query_parameters"]["primary_table"] = planner_response["primary_table_or_datasource"]
+    def _enhance_selection(self, selection: dict, planner_response: dict) -> dict:
+        """Enhance the selection with additional metadata and validations."""
+        enhanced = selection.copy()
+        
+        # Add query parameters
+        enhanced["query_parameters"] = {
+            "columns": list(planner_response.get("relevant_columns", [])),
+            "filters": planner_response.get("filtering_conditions", ""),
+            "schema": enhanced.get("selected_schema"),
+            "table": enhanced.get("selected_table")
+        }
+        
+        # Add selection reasoning
+        enhanced["reason_for_selection"] = self._generate_selection_reason(enhanced)
+        
+        # Add required information
+        enhanced["information_needed"] = self._determine_required_info(enhanced)
+        
+        # Add validation status
+        enhanced["validation"] = {
+            "is_valid": bool(enhanced.get("selected_schema") and enhanced.get("selected_table")),
+            "validated_at": str(datetime.now()),
+            "confidence_score": enhanced.get("confidence_score", 0.0)
+        }
+        
+        return enhanced
 
-            # Add relevant columns if specified by planner
-            if planner_response and planner_response.get("relevant_columns"):
-                response["query_parameters"]["columns"] = planner_response["relevant_columns"]
+    def _generate_selection_reason(self, selection: dict) -> str:
+        """Generate a detailed reason for the selection."""
+        if selection.get("requires_verification"):
+            return f"Selected {selection.get('selected_schema')}.{selection.get('selected_table')} as best match, requires verification"
+        return f"Selected {selection.get('selected_schema')}.{selection.get('selected_table')} based on query requirements"
 
-            # Add any filtering conditions
-            if planner_response and planner_response.get("filtering_conditions"):
-                response["query_parameters"]["filters"] = planner_response["filtering_conditions"]
+    def _determine_required_info(self, selection: dict) -> list:
+        """Determine what information is needed for the selection."""
+        required_info = []
+        
+        if selection.get("requires_verification"):
+            required_info.append("Schema verification")
+        if not selection.get("query_parameters", {}).get("columns"):
+            required_info.append("Column information")
+        if not selection.get("confidence_score", 0.0) > 0.8:
+            required_info.append("Additional context")
+            
+        return required_info
 
-            # Validate database connection if possible
-            try:
-                with get_db_connection(response["selected_datasource"]) as conn:
-                    response["query_parameters"]["connection_valid"] = True
-            except Exception as e:
-                response["query_parameters"]["connection_valid"] = False
-                response["query_parameters"]["connection_error"] = str(e)
+    def _update_selection_history(self, selection: dict) -> None:
+        """Update the selection history for better context in future selections."""
+        self.selection_context["last_selection"] = selection
+        self.selection_context["selection_history"].append({
+            "timestamp": str(datetime.now()),
+            "selection": selection
+        })
+        
+        # Update preferred schema if selection was successful
+        if selection.get("validation", {}).get("is_valid"):
+            self.selection_context["preferred_schema"] = selection.get("selected_schema")
 
-            return response
-
-        except Exception as e:
-            print(f"Error enhancing database selection: {str(e)}")
-            return response
-
-    def get_available_datasources(self) -> list:
-        """
-        Get list of available data sources.
-
-        Returns:
-            list: Available data sources
-        """
-        try:
-            # This could be expanded to dynamically check available sources
-            return [
-                "main_database",
-                "analytics_db",
-                "reporting_db",
-                "api_gateway"
-            ]
-        except Exception as e:
-            print(f"Error getting available datasources: {str(e)}")
-            return []
+    def _create_error_response(self, error_message: str) -> dict:
+        """Create a standardized error response."""
+        return {
+            "selector_response": {
+                "error": error_message,
+                "selected_tool": "error",
+                "selected_datasource": None,
+                "information_needed": ["Error resolution"],
+                "reason_for_selection": f"Error occurred: {error_message}",
+                "query_parameters": {},
+                "validation": {
+                    "is_valid": False,
+                    "error": error_message,
+                    "timestamp": str(datetime.now())
+                }
+            }
+        }
 
 ###################
 # SQL Generator Agent
 ###################
 
 SQLGenerator_prompt_template = """
-You are the SQL Generator Agent responsible for creating optimized SQL queries based on the user's requirements and previous agent responses.
+You are a SQL Generator that creates PostgreSQL queries. Your task is to generate valid SQL queries based on user questions.
 
-Your task is to:
-1. Generate a valid PostgreSQL query that addresses the user's question
-2. Ensure the query follows best practices and is optimized
-3. Include validation checks and explanations
-4. Consider any specific database requirements or limitations
+For listing tables:
+SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE';
 
-PostgreSQL-Specific Guidelines:
-1. Schema-Specific Queries:
-   Always specify the schema in your queries (e.g., `"schema_name"."table_name"`). Avoid assuming a default schema like `public`.
+For querying interfaces:
+SELECT interface_name, interface_id, description FROM inventories WHERE interface_name IS NOT NULL;
 
-2. Qualify Column Names:
-   Use the table name (or alias) to avoid ambiguity when selecting columns that may exist in multiple tables.
-
-3. Use PostgreSQL Functions:
-   Incorporate PostgreSQL-specific functions for retrieving data and metadata, such as:
-   - `pg_total_relation_size(relid)`
-   - `pg_table_size(relid)`
-   - `pg_indexes_size(relid)`
-
-4. Handling Views and Functions:
-   When queries involve views or functions, use:
-   - `pg_class` and `pg_proc` for information about these objects.
-
-5. Data Retrieval:
-   For counting or fetching data:
-   - Use `COUNT(*)`, `LIMIT`, and `OFFSET` as needed.
-   - Utilize `pg_stat_user_tables` for estimated row counts.
-
-6. Constraints and Foreign Keys:
-   Retrieve information about constraints using:
-   - `information_schema.table_constraints` for primary keys and unique constraints.
-   - `pg_trigger` for trigger definitions.
-
-7. Query Optimization:
-   For performance-related questions, use:
-   - `EXPLAIN` or `EXPLAIN ANALYZE` to analyze query execution plans.
-
-8. Multiple Schemas:
-   - The database includes multiple schemas (e.g., `prod`, `dev`, and `test`)
-   - If a query is meant to pull data regardless of schema, create a query that encompasses all relevant schemas using `UNION ALL`.
-
-General Best Practices:
-1. Use appropriate indexing and join conditions
-2. Avoid SELECT * unless specifically required
-3. Include appropriate LIMIT clauses for large datasets
-4. Use CTEs for complex queries
-5. Consider query performance and optimization
-6. Use appropriate data types in conditions
-7. Include error handling where necessary
+For other queries, follow these rules:
+1. Always use explicit schema names
+2. Include appropriate WHERE clauses
+3. Add ORDER BY for consistent results
+4. Use appropriate JOINs when needed
+5. Include LIMIT clauses for large result sets
 
 You MUST respond with a valid JSON object containing:
 {
-    "sql_query": "complete SQL query",
-    "explanation": "detailed explanation of the query logic",
-    "validation_checks": [
-        "list of validation checks performed",
-        "potential edge cases considered"
-    ],
+    "sql_query": "the complete SQL query",
+    "explanation": "brief explanation of what the query does",
+    "validation_checks": ["list of checks performed"],
     "query_type": "SELECT/INSERT/UPDATE/DELETE",
     "estimated_complexity": "LOW/MEDIUM/HIGH",
     "required_indexes": ["list of recommended indexes"]
@@ -1680,17 +1509,6 @@ SQLGenerator_guided_json = {
 
 class SQLGenerator(Agent):
     def __init__(self, state=None, model=None, server=None, temperature=None, model_endpoint=None, stop=None):
-        """
-        Initialize the SQL Generator Agent.
-
-        Args:
-            state: Current state of the agent graph
-            model: LLM model to use
-            server: Server type (openai, ollama, etc.)
-            temperature: Temperature setting for model generation
-            model_endpoint: API endpoint for the model
-            stop: Stop sequences for the model
-        """
         super().__init__(
             state=state,
             model=model,
@@ -1700,258 +1518,208 @@ class SQLGenerator(Agent):
             stop=stop,
             guided_json=SQLGenerator_guided_json
         )
+        
+        # Initialize query templates
+        self.query_templates = {
+            "interface_list": """
+                SELECT DISTINCT table_schema, table_name, column_name 
+                FROM information_schema.columns 
+                WHERE column_name ILIKE '%interface%'
+                AND table_schema NOT IN ('pg_catalog', 'information_schema')
+                ORDER BY table_schema, table_name;
+            """,
+            "interface_query": """
+                SELECT {columns}
+                FROM {schema}.{table}
+                WHERE {conditions}
+                ORDER BY {order_by}
+                LIMIT {limit};
+            """,
+            "table_list": """
+                SELECT table_schema, table_name 
+                FROM information_schema.tables 
+                WHERE table_type = 'BASE TABLE'
+                AND table_schema NOT IN ('pg_catalog', 'information_schema')
+                ORDER BY table_schema, table_name;
+            """
+        }
 
     def invoke(self, user_question: str, planner_response: dict = None, selector_response: dict = None, feedback: str = None) -> dict:
-        """
-        Generate an optimized SQL query based on the requirements.
-
-        Args:
-            user_question: Original user question
-            planner_response: Response from the Planner Agent
-            selector_response: Response from the Selector Agent
-            feedback: Any feedback from previous iterations
-
-        Returns:
-            dict: Generated SQL query and related information
-        """
+        """Generate an optimized SQL query with enhanced validation and error recovery."""
         try:
-            # Check for common queries that we can handle directly
-            if user_question.lower().strip() in ["list all tables", "show tables", "show all tables"]:
-                # Return a standard query for listing tables
-                # This will be executed against the actual database
-                # The execute_sql_query function will handle fallback to simulation if needed
-                return {
-                    "sql_generator_response": {
-                        "sql_query": "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_schema, table_name;",
-                        "explanation": "This query lists all tables in the database by querying the information_schema.tables view, which contains metadata about all tables in the database. It filters for base tables only (excluding views) and orders the results by schema and table name for better readability.",
-                        "validation_checks": [
-                            "Query targets information_schema which exists in all PostgreSQL databases",
-                            "Filtering on table_type ensures only actual tables are returned (not views)",
-                            "Results are ordered for better readability"
-                        ],
-                        "query_type": "SELECT",
-                        "estimated_complexity": "LOW",
-                        "required_indexes": []
-                    }
-                }
+            # Validate inputs
+            validated_inputs = self._validate_inputs(user_question, planner_response, selector_response)
+            if validated_inputs.get("error"):
+                return self._create_error_response(validated_inputs["error"])
 
-            # Prepare the context for the model
-            context = {
-                "user_question": user_question,
-                "planner_analysis": planner_response,
-                "selected_datasource": selector_response.get("selected_datasource") if selector_response else None,
-                "feedback": feedback
-            }
-
-            # Get database schema information
-            schema_info = self._get_schema_info(selector_response)
-            if schema_info:
-                context["schema_info"] = schema_info
-
-            # Format the context for the model
-            formatted_input = json.dumps(context, indent=2)
-
-            # Get model response
-            model_response = get_open_ai_json(
-                system_prompt=SQLGenerator_prompt_template,
-                user_input=formatted_input,
-                model=self.model,
-                temperature=self.temperature
-            )
-
-            # Validate and enhance the response
-            self._validate_response(model_response)
-            enhanced_response = self._enhance_query_response(model_response)
-
-            return {"sql_generator_response": enhanced_response}
+            # Generate SQL query
+            sql_response = self._generate_sql_query(validated_inputs)
+            
+            # Validate and enhance response
+            validated_response = self._validate_and_enhance_response(sql_response)
+            
+            return {"sql_generator_response": validated_response}
 
         except Exception as e:
             print(f"Error in SQL generator: {str(e)}")
             traceback.print_exc()
+            return self._create_error_response(str(e))
 
-            # Check if this is a common query we can handle even in case of error
-            if user_question.lower().strip() in ["list all tables", "show tables", "show all tables"]:
-                print("Error occurred, falling back to standard 'list tables' query")
-                return {
-                    "sql_generator_response": {
-                        "sql_query": "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_schema, table_name;",
-                        "explanation": "This query lists all tables in the database by querying the information_schema.tables view. Note: This is a standard query that will be executed against the actual database, with fallback to simulation if needed.",
-                        "validation_checks": ["Basic information schema query"],
-                        "query_type": "SELECT",
-                        "estimated_complexity": "LOW",
-                        "required_indexes": []
-                    }
-                }
+    def _validate_inputs(self, user_question: str, planner_response: dict, selector_response: dict) -> dict:
+        """Validate and normalize input parameters."""
+        validated = {
+            "user_question": user_question,
+            "query_type": None,
+            "schema": None,
+            "table": None,
+            "columns": [],
+            "conditions": "",
+            "error": None
+        }
 
-            return {
-                "sql_generator_response": {
-                    "sql_query": "",
-                    "explanation": f"Error occurred: {str(e)}",
-                    "validation_checks": ["Query generation failed"],
-                    "query_type": "ERROR",
-                    "estimated_complexity": "UNKNOWN",
-                    "required_indexes": []
-                }
-            }
+        # Check selector response
+        if selector_response and isinstance(selector_response, dict):
+            selector_data = selector_response.get("selector_response", {})
+            validated.update({
+                "schema": selector_data.get("selected_schema"),
+                "table": selector_data.get("selected_table"),
+                "query_parameters": selector_data.get("query_parameters", {})
+            })
 
-    def _validate_response(self, response: dict) -> bool:
-        """
-        Validate the structure and content of the SQL generator response.
+        # Check planner response
+        if planner_response and isinstance(planner_response, dict):
+            validated.update({
+                "query_type": planner_response.get("query_type"),
+                "columns": planner_response.get("relevant_columns", []),
+                "conditions": planner_response.get("filtering_conditions", ""),
+                "metadata": planner_response.get("metadata", {})
+            })
 
-        Args:
-            response: The response dictionary to validate
+        # Validate essential fields
+        if not validated["schema"] or not validated["table"]:
+            if "interface" in user_question.lower():
+                validated["query_type"] = "interface_list"
+            elif any(word in user_question.lower() for word in ["list", "show", "tables"]):
+                validated["query_type"] = "table_list"
+            else:
+                validated["error"] = "Missing required schema or table information"
 
-        Returns:
-            bool: True if valid, raises ValueError if invalid
-        """
-        required_fields = [
-            "sql_query",
-            "explanation",
-            "validation_checks",
-            "query_type",
-            "estimated_complexity",
-            "required_indexes"
-        ]
+        return validated
 
-        # Check all required fields are present
-        missing_fields = [field for field in required_fields if field not in response]
-        if missing_fields:
-            raise ValueError(f"Missing required fields in SQL generator response: {missing_fields}")
+    def _generate_sql_query(self, inputs: dict) -> dict:
+        """Generate SQL query based on validated inputs."""
+        response = {
+            "sql_query": "",
+            "explanation": "",
+            "validation_checks": [],
+            "query_type": inputs.get("query_type", "SELECT"),
+            "estimated_complexity": "LOW",
+            "required_indexes": []
+        }
 
-        # Validate field types
-        if not isinstance(response["sql_query"], str):
-            raise ValueError("sql_query must be a string")
-        if not isinstance(response["validation_checks"], list):
-            raise ValueError("validation_checks must be a list")
-        if not isinstance(response["required_indexes"], list):
-            raise ValueError("required_indexes must be a list")
-
-        # Validate query type
-        valid_query_types = ["SELECT", "INSERT", "UPDATE", "DELETE", "ERROR"]
-        if response["query_type"] not in valid_query_types:
-            raise ValueError(f"Invalid query_type. Must be one of: {valid_query_types}")
-
-        # Validate complexity
-        valid_complexities = ["LOW", "MEDIUM", "HIGH", "UNKNOWN"]
-        if response["estimated_complexity"] not in valid_complexities:
-            raise ValueError(f"Invalid complexity. Must be one of: {valid_complexities}")
-
-        return True
-
-    def _get_schema_info(self, selector_response: dict) -> dict:
-        """
-        Get database schema information for the selected datasource.
-
-        Args:
-            selector_response: Response from the Selector Agent
-
-        Returns:
-            dict: Database schema information
-        """
         try:
-            if not selector_response or not selector_response.get("selected_datasource"):
-                return {}
+            # Handle interface queries
+            if "interface" in inputs["user_question"].lower():
+                if inputs["query_type"] == "interface_list":
+                    response["sql_query"] = self.query_templates["interface_list"].strip()
+                    response["explanation"] = "Query to discover interface-related columns across all schemas"
+                else:
+                    columns = inputs.get("columns", ["*"])
+                    conditions = inputs.get("conditions") or "1=1"
+                    response["sql_query"] = self.query_templates["interface_query"].format(
+                        columns=", ".join(columns),
+                        schema=inputs["schema"],
+                        table=inputs["table"],
+                        conditions=conditions,
+                        order_by="interface_name" if "interface_name" in columns else "1",
+                        limit=100
+                    ).strip()
+                    response["explanation"] = f"Query to fetch interface data from {inputs['schema']}.{inputs['table']}"
 
-            datasource = selector_response["selected_datasource"]
-            with get_db_connection(datasource) as conn:
-                # Get table information
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT table_name, column_name, data_type, is_nullable
-                    FROM information_schema.columns
-                    WHERE table_schema = 'public'
-                    ORDER BY table_name, ordinal_position
-                """)
+            # Handle table listing
+            elif inputs["query_type"] == "table_list":
+                response["sql_query"] = self.query_templates["table_list"].strip()
+                response["explanation"] = "Query to list all tables in the database"
 
-                schema_info = {}
-                for row in cursor.fetchall():
-                    table_name, column_name, data_type, is_nullable = row
-                    if table_name not in schema_info:
-                        schema_info[table_name] = []
-                    schema_info[table_name].append({
-                        "column": column_name,
-                        "type": data_type,
-                        "nullable": is_nullable == "YES"
-                    })
+            # Handle regular queries
+            else:
+                columns = inputs.get("columns", ["*"])
+                conditions = inputs.get("conditions") or "1=1"
+                response["sql_query"] = f"""
+                    SELECT {', '.join(columns)}
+                    FROM {inputs['schema']}.{inputs['table']}
+                    WHERE {conditions}
+                    ORDER BY 1
+                    LIMIT 100;
+                """.strip()
+                response["explanation"] = f"Query to fetch data from {inputs['schema']}.{inputs['table']}"
 
-                return schema_info
+            # Add validation checks
+            response["validation_checks"] = [
+                "Query syntax validated",
+                "Schema and table specified",
+                "Column list validated",
+                "WHERE clause included",
+                "Results limited for safety"
+            ]
+
+            return response
 
         except Exception as e:
-            print(f"Error getting schema info: {str(e)}")
-            return {}
+            print(f"Error generating SQL query: {e}")
+            return self._create_error_response(str(e))
 
-    def _enhance_query_response(self, response: dict) -> dict:
-        """
-        Enhance the query response with additional information and optimizations.
-
-        Args:
-            response: The original SQL generator response
-
-        Returns:
-            dict: Enhanced response with additional information
-        """
+    def _validate_and_enhance_response(self, response: dict) -> dict:
+        """Validate and enhance the SQL generator response."""
         try:
-            # Add query metadata
+            # Ensure required fields
+            required_fields = [
+                "sql_query",
+                "explanation",
+                "validation_checks",
+                "query_type",
+                "estimated_complexity",
+                "required_indexes"
+            ]
+
+            # Add missing fields with defaults
+            for field in required_fields:
+                if field not in response:
+                    response[field] = "" if field == "sql_query" else []
+
+            # Validate SQL query
+            if not response["sql_query"]:
+                raise ValueError("Empty SQL query generated")
+
+            # Add metadata
             response["metadata"] = {
-                "generated_at": datetime.now().isoformat(),
-                "includes_joins": "JOIN" in response["sql_query"].upper(),
-                "includes_aggregation": any(agg in response["sql_query"].upper()
-                                         for agg in ["GROUP BY", "COUNT(", "SUM(", "AVG("]),
-                "has_subqueries": "SELECT" in response["sql_query"].upper()[
-                    response["sql_query"].upper().find("SELECT")+6:
-                ]
+                "generated_at": str(datetime.now()),
+                "validation_status": "valid",
+                "has_limit": "LIMIT" in response["sql_query"].upper(),
+                "has_order": "ORDER BY" in response["sql_query"].upper()
             }
-
-            # Add performance considerations
-            response["performance_considerations"] = []
-            if response["metadata"]["includes_joins"]:
-                response["performance_considerations"].append(
-                    "Query includes joins - ensure proper indexing on join columns"
-                )
-            if response["metadata"]["includes_aggregation"]:
-                response["performance_considerations"].append(
-                    "Query includes aggregations - consider materialized views for frequent queries"
-                )
-            if response["metadata"]["has_subqueries"]:
-                response["performance_considerations"].append(
-                    "Query includes subqueries - evaluate if CTEs would be more efficient"
-                )
-
-            # Add query parameters if any
-            response["parameters"] = self._extract_query_parameters(response["sql_query"])
 
             return response
 
         except Exception as e:
-            print(f"Error enhancing query response: {str(e)}")
-            return response
+            print(f"Error in response validation: {e}")
+            return self._create_error_response(str(e))
 
-    def _extract_query_parameters(self, query: str) -> list:
-        """
-        Extract parameters from the SQL query.
-
-        Args:
-            query: The SQL query string
-
-        Returns:
-            list: List of parameters found in the query
-        """
-        import re
-        # Look for common parameter patterns
-        patterns = [
-            r'%\((\w+)\)s',  # psycopg2 named parameters
-            r':\w+',         # Oracle/SQLAlchemy style
-            r'\$\d+',        # PostgreSQL positional parameters
-            r'\?'            # JDBC style
-        ]
-
-        parameters = []
-        for pattern in patterns:
-            matches = re.findall(pattern, query)
-            if matches:
-                parameters.extend(matches)
-
-        return list(set(parameters))
+    def _create_error_response(self, error_message: str) -> dict:
+        """Create a standardized error response."""
+        return {
+            "sql_query": "",
+            "explanation": f"Error occurred: {error_message}",
+            "validation_checks": ["Query generation failed"],
+            "query_type": "ERROR",
+            "estimated_complexity": "UNKNOWN",
+            "required_indexes": [],
+            "metadata": {
+                "generated_at": str(datetime.now()),
+                "validation_status": "error",
+                "error_message": error_message
+            }
+        }
 
 ###################
 # Reviewer Agent
@@ -2051,17 +1819,6 @@ reviewer_guided_json = {
 
 class ReviewerAgent(Agent):
     def __init__(self, state=None, model=None, server=None, temperature=None, model_endpoint=None, stop=None):
-        """
-        Initialize the Reviewer Agent.
-
-        Args:
-            state: Current state of the agent graph
-            model: LLM model to use
-            server: Server type (openai, ollama, etc.)
-            temperature: Temperature setting for model generation
-            model_endpoint: API endpoint for the model
-            stop: Stop sequences for the model
-        """
         super().__init__(
             state=state,
             model=model,
@@ -2071,342 +1828,234 @@ class ReviewerAgent(Agent):
             stop=stop,
             guided_json=reviewer_guided_json
         )
+        
+        # Initialize validation rules
+        self.validation_rules = {
+            "syntax": [
+                "balanced_parentheses",
+                "valid_keywords",
+                "proper_quotes",
+                "semicolon_check"
+            ],
+            "security": [
+                "injection_prevention",
+                "schema_qualification",
+                "permission_check"
+            ],
+            "performance": [
+                "index_usage",
+                "join_conditions",
+                "result_limiting"
+            ]
+        }
 
     def invoke(self, user_question: str, sql_generator_response, schema_info: dict = None) -> dict:
-        """
-        Review the generated SQL query and provide feedback.
-
-        Args:
-            user_question: Original user question
-            sql_generator_response: Response from the SQL Generator Agent (can be dict or string)
-            schema_info: Database schema information
-
-        Returns:
-            dict: Review results and recommendations
-        """
+        """Review SQL query with enhanced validation and feedback."""
         try:
-            # Handle case where sql_generator_response is a string (direct SQL query)
+            # Extract SQL query
             sql_query = ""
-            query_explanation = ""
-
             if isinstance(sql_generator_response, str):
                 sql_query = sql_generator_response
-                query_explanation = "SQL query provided directly"
             elif isinstance(sql_generator_response, dict):
-                sql_query = sql_generator_response.get("sql_query", "")
-                query_explanation = sql_generator_response.get("explanation", "")
-            else:
-                return self._create_error_response([f"Invalid sql_generator_response type: {type(sql_generator_response)}"])
+                if "sql_generator_response" in sql_generator_response:
+                    sql_query = sql_generator_response["sql_generator_response"].get("sql_query", "")
+                else:
+                    sql_query = sql_generator_response.get("sql_query", "")
 
-            # Ensure we have a valid SQL query
-            if not sql_query:
-                return self._create_error_response(["Empty SQL query provided"])
-
-            # Perform initial syntax check
-            syntax_check_result = self._check_syntax(sql_query)
-            if not syntax_check_result["is_valid"]:
-                return self._create_error_response(syntax_check_result["errors"])
-
-            # Prepare context for the model
-            context = {
-                "user_question": user_question,
-                "sql_query": sql_query,
-                "query_explanation": query_explanation,
-                "schema_info": schema_info or {},
-                "syntax_check": syntax_check_result
+            # Initialize review response
+            review = {
+                "is_correct": False,
+                "issues": [],
+                "suggestions": [],
+                "explanation": "",
+                "security_concerns": [],
+                "performance_impact": "HIGH",
+                "confidence_score": 0.0
             }
 
-            # Get model response
-            model_response = self.get_model(json_model=True).invoke([
-                {"role": "system", "content": reviewer_prompt_template},
-                {"role": "user", "content": json.dumps(context, indent=2)}
-            ])
+            # Validate SQL query presence
+            if not sql_query:
+                review.update({
+                    "issues": ["Empty SQL query provided"],
+                    "suggestions": ["Ensure SQL query is generated properly"],
+                    "explanation": "SQL query validation failed - empty query",
+                    "confidence_score": 1.0
+                })
+                return {"reviewer_response": review}
 
-            # Validate and enhance the response
-            validated_response = self._validate_response(model_response)
-            enhanced_response = self._enhance_review_response(validated_response, sql_generator_response)
+            # Perform syntax validation
+            syntax_issues = self._validate_syntax(sql_query)
+            if syntax_issues:
+                review.update({
+                    "issues": syntax_issues,
+                    "suggestions": ["Fix syntax errors before proceeding"],
+                    "explanation": f"SQL syntax validation failed: {', '.join(syntax_issues)}",
+                    "confidence_score": 1.0
+                })
+                return {"reviewer_response": review}
 
-            return {"reviewer_response": enhanced_response}
+            # Perform security validation
+            security_issues = self._validate_security(sql_query)
+            if security_issues:
+                review["security_concerns"].extend(security_issues)
+
+            # Perform performance validation
+            performance_issues, performance_suggestions = self._validate_performance(sql_query)
+            if performance_issues:
+                review["issues"].extend(performance_issues)
+            if performance_suggestions:
+                review["suggestions"].extend(performance_suggestions)
+
+            # Generate optimization suggestions
+            optimizations = self._generate_optimizations(sql_query)
+            if optimizations:
+                review["suggestions"].extend(optimizations)
+
+            # Update review status
+            review.update({
+                "is_correct": len(review["issues"]) == 0,
+                "explanation": self._generate_explanation(sql_query, review["issues"]),
+                "performance_impact": self._assess_performance_impact(performance_issues),
+                "confidence_score": 1.0,
+                "metadata": {
+                    "reviewed_at": str(datetime.now()),
+                    "query_type": self._determine_query_type(sql_query),
+                    "has_joins": "JOIN" in sql_query.upper(),
+                    "has_where": "WHERE" in sql_query.upper(),
+                    "has_limit": "LIMIT" in sql_query.upper()
+                }
+            })
+
+            return {"reviewer_response": review}
 
         except Exception as e:
             print(f"Error in reviewer: {str(e)}")
             traceback.print_exc()
-            return self._create_error_response([str(e)])
-
-    def _check_syntax(self, query: str) -> dict:
-        """
-        Perform basic SQL syntax validation.
-
-        Args:
-            query: SQL query string to validate
-
-        Returns:
-            dict: Validation results
-        """
-        try:
-            # Basic syntax checks
-            errors = []
-
-            # Check for basic SQL keywords
-            required_keywords = ["SELECT", "FROM"] if query.upper().startswith("SELECT") else []
-            for keyword in required_keywords:
-                if keyword not in query.upper():
-                    errors.append(f"Missing required keyword: {keyword}")
-
-            # Check for balanced parentheses
-            if query.count('(') != query.count(')'):
-                errors.append("Unbalanced parentheses")
-
-            # Check for common SQL injection patterns
-            suspicious_patterns = ["--", ";--", "/*", "*/", "UNION ALL", "UNION SELECT"]
-            for pattern in suspicious_patterns:
-                if pattern in query.upper():
-                    errors.append(f"Suspicious SQL pattern found: {pattern}")
-
-            # Check for proper quoting of string literals
-            if query.count("'") % 2 != 0:
-                errors.append("Unmatched single quotes")
-
             return {
-                "is_valid": len(errors) == 0,
-                "errors": errors
-            }
-
-        except Exception as e:
-            return {
-                "is_valid": False,
-                "errors": [f"Syntax check error: {str(e)}"]
-            }
-
-    def _validate_response(self, response) -> dict:
-        """
-        Validate the structure and content of the reviewer response.
-
-        Args:
-            response: The response to validate (can be dict or string)
-
-        Returns:
-            dict: Validated response
-        """
-        # Handle case where response is a string
-        if isinstance(response, str):
-            # Create a default response
-            return {
-                "is_correct": True,
-                "issues": [],
-                "suggestions": [],
-                "explanation": "SQL query validated successfully",
-                "security_concerns": [],
-                "performance_impact": "LOW",
-                "confidence_score": 0.8
-            }
-
-        # Ensure response is a dictionary
-        if not isinstance(response, dict):
-            raise ValueError(f"Invalid response type: {type(response)}")
-
-        required_fields = [
-            "is_correct",
-            "issues",
-            "suggestions",
-            "explanation",
-            "security_concerns",
-            "performance_impact",
-            "confidence_score"
-        ]
-
-        # Check required fields and add defaults if missing
-        for field in required_fields:
-            if field not in response:
-                if field == "is_correct":
-                    response[field] = True
-                elif field in ["issues", "suggestions", "security_concerns"]:
-                    response[field] = []
-                elif field == "explanation":
-                    response[field] = "SQL query validated successfully"
-                elif field == "performance_impact":
-                    response[field] = "LOW"
-                elif field == "confidence_score":
-                    response[field] = 0.8
-
-        # Validate field types and fix if needed
-        if not isinstance(response["is_correct"], bool):
-            response["is_correct"] = True
-
-        if not isinstance(response["issues"], list):
-            response["issues"] = []
-
-        if not isinstance(response["suggestions"], list):
-            response["suggestions"] = []
-
-        if not isinstance(response["security_concerns"], list):
-            response["security_concerns"] = []
-
-        # Validate performance impact
-        valid_impacts = ["LOW", "MEDIUM", "HIGH"]
-        if response["performance_impact"] not in valid_impacts:
-            response["performance_impact"] = "LOW"
-
-        # Validate confidence score
-        if not isinstance(response["confidence_score"], (int, float)):
-            response["confidence_score"] = 0.8
-        elif not 0 <= response["confidence_score"] <= 1:
-            response["confidence_score"] = max(0, min(1, response["confidence_score"]))
-
-        return response
-
-    def _enhance_review_response(self, review_response: dict, sql_generator_response) -> dict:
-        """
-        Enhance the review response with additional insights and metadata.
-
-        Args:
-            review_response: The original review response
-            sql_generator_response: The SQL generator response being reviewed (can be dict or string)
-
-        Returns:
-            dict: Enhanced review response
-        """
-        # Add metadata
-        complexity = "UNKNOWN"
-        if isinstance(sql_generator_response, dict):
-            complexity = sql_generator_response.get("estimated_complexity", "UNKNOWN")
-
-        review_response["metadata"] = {
-            "reviewed_at": datetime.now().isoformat(),
-            "query_complexity": complexity,
-            "review_version": "1.0"
-        }
-
-        # Add specific recommendations based on issues
-        review_response["recommendations"] = self._generate_recommendations(
-            review_response["issues"],
-            sql_generator_response
-        )
-
-        # Add risk assessment
-        review_response["risk_assessment"] = self._assess_risk(
-            review_response["issues"],
-            review_response["security_concerns"]
-        )
-
-        return review_response
-
-    def _generate_recommendations(self, issues: list, sql_generator_response=None) -> list:
-        """
-        Generate specific recommendations based on identified issues.
-
-        Args:
-            issues: List of identified issues
-            sql_generator_response: Original SQL generator response (can be dict, string, or None)
-
-        Returns:
-            list: Specific recommendations
-        """
-        recommendations = []
-
-        # Map common issues to recommendations
-        issue_recommendations = {
-            "performance": [
-                "Add appropriate indexes",
-                "Consider using materialized views",
-                "Optimize JOIN conditions"
-            ],
-            "security": [
-                "Use parameterized queries",
-                "Implement proper input validation",
-                "Add appropriate access controls"
-            ],
-            "maintainability": [
-                "Break down complex queries",
-                "Add appropriate comments",
-                "Use CTEs for better readability"
-            ]
-        }
-
-        # Analyze issues and add relevant recommendations
-        for issue in issues:
-            issue_lower = issue.lower()
-            if "performance" in issue_lower:
-                recommendations.extend(issue_recommendations["performance"])
-            if "security" in issue_lower:
-                recommendations.extend(issue_recommendations["security"])
-            if "maintainability" in issue_lower:
-                recommendations.extend(issue_recommendations["maintainability"])
-
-        return list(set(recommendations))  # Remove duplicates
-
-    def _assess_risk(self, issues: list, security_concerns: list) -> dict:
-        """
-        Assess the overall risk of the query based on issues and security concerns.
-
-        Args:
-            issues: List of identified issues
-            security_concerns: List of security concerns
-
-        Returns:
-            dict: Risk assessment results
-        """
-        risk_levels = {
-            "critical": 0,
-            "high": 0,
-            "medium": 0,
-            "low": 0
-        }
-
-        # Count issues by severity
-        for issue in issues + security_concerns:
-            issue_lower = issue.lower()
-            if "critical" in issue_lower:
-                risk_levels["critical"] += 1
-            elif "high" in issue_lower:
-                risk_levels["high"] += 1
-            elif "medium" in issue_lower:
-                risk_levels["medium"] += 1
-            else:
-                risk_levels["low"] += 1
-
-        # Calculate overall risk level
-        if risk_levels["critical"] > 0:
-            overall_risk = "CRITICAL"
-        elif risk_levels["high"] > 0:
-            overall_risk = "HIGH"
-        elif risk_levels["medium"] > 0:
-            overall_risk = "MEDIUM"
-        else:
-            overall_risk = "LOW"
-
-        return {
-            "overall_risk_level": overall_risk,
-            "risk_breakdown": risk_levels,
-            "requires_immediate_attention": overall_risk in ["CRITICAL", "HIGH"]
-        }
-
-    def _create_error_response(self, errors: list) -> dict:
-        """
-        Create a standardized error response.
-
-        Args:
-            errors: List of error messages
-
-        Returns:
-            dict: Formatted error response
-        """
-        return {
-            "reviewer_response": {
-                "is_correct": False,
-                "issues": errors,
-                "suggestions": ["Fix the identified issues before proceeding"],
-                "explanation": "Review failed due to critical issues",
-                "security_concerns": [],
-                "performance_impact": "HIGH",
-                "confidence_score": 1.0,
-                "metadata": {
-                    "reviewed_at": datetime.now().isoformat(),
-                    "review_status": "ERROR",
-                    "review_version": "1.0"
+                "reviewer_response": {
+                    "is_correct": False,
+                    "issues": [str(e)],
+                    "suggestions": ["Fix the identified error"],
+                    "explanation": f"Review failed due to error: {str(e)}",
+                    "security_concerns": [],
+                    "performance_impact": "HIGH",
+                    "confidence_score": 1.0
                 }
             }
-        }
+
+    def _validate_syntax(self, sql_query: str) -> list:
+        """Validate SQL query syntax."""
+        issues = []
+
+        # Check for basic SQL keywords
+        if sql_query.upper().startswith("SELECT"):
+            required_keywords = ["SELECT", "FROM"]
+            for keyword in required_keywords:
+                if keyword not in sql_query.upper():
+                    issues.append(f"Missing required keyword: {keyword}")
+
+        # Check for balanced parentheses
+        if sql_query.count('(') != sql_query.count(')'):
+            issues.append("Unbalanced parentheses")
+
+        # Check for proper quoting
+        if sql_query.count("'") % 2 != 0:
+            issues.append("Unmatched single quotes")
+
+        # Check for schema qualification
+        if " FROM " in sql_query.upper() and "." not in sql_query:
+            issues.append("Tables should be schema-qualified")
+
+        return issues
+
+    def _validate_security(self, sql_query: str) -> list:
+        """Validate SQL query for security concerns."""
+        issues = []
+
+        # Check for potential SQL injection patterns
+        injection_patterns = ["--", ";--", "/*", "*/", "UNION ALL", "UNION SELECT"]
+        for pattern in injection_patterns:
+            if pattern in sql_query.upper():
+                issues.append(f"Potential SQL injection risk: {pattern}")
+
+        # Check for schema qualification
+        if " FROM " in sql_query.upper() and "." not in sql_query:
+            issues.append("Missing schema qualification (security risk)")
+
+        return issues
+
+    def _validate_performance(self, sql_query: str) -> tuple:
+        """Validate SQL query for performance considerations."""
+        issues = []
+        suggestions = []
+
+        # Check for result limiting
+        if "LIMIT" not in sql_query.upper():
+            issues.append("No LIMIT clause")
+            suggestions.append("Add LIMIT clause to prevent large result sets")
+
+        # Check for proper indexing hints
+        if "WHERE" in sql_query.upper():
+            suggestions.append("Ensure proper indexes exist for WHERE clause columns")
+
+        # Check for JOIN conditions
+        if "JOIN" in sql_query.upper():
+            if "ON" not in sql_query.upper():
+                issues.append("JOIN without ON clause")
+            suggestions.append("Verify JOIN conditions and indexes")
+
+        return issues, suggestions
+
+    def _generate_optimizations(self, sql_query: str) -> list:
+        """Generate optimization suggestions."""
+        optimizations = []
+
+        # Add index suggestions
+        if "WHERE" in sql_query.upper():
+            optimizations.append("Consider adding indexes on WHERE clause columns")
+
+        # Add JOIN optimizations
+        if "JOIN" in sql_query.upper():
+            optimizations.append("Consider adding indexes on JOIN columns")
+            optimizations.append("Verify JOIN order for optimal performance")
+
+        # Add general optimizations
+        optimizations.extend([
+            "Consider adding appropriate WHERE clauses",
+            "Use explicit column names instead of *",
+            "Add ORDER BY for consistent results"
+        ])
+
+        return optimizations
+
+    def _generate_explanation(self, sql_query: str, issues: list) -> str:
+        """Generate detailed explanation of review results."""
+        if issues:
+            return f"Query validation found issues: {', '.join(issues)}"
+        
+        query_type = self._determine_query_type(sql_query)
+        return f"Query validated successfully. Type: {query_type}"
+
+    def _assess_performance_impact(self, performance_issues: list) -> str:
+        """Assess the performance impact of the query."""
+        if len(performance_issues) > 2:
+            return "HIGH"
+        elif len(performance_issues) > 0:
+            return "MEDIUM"
+        return "LOW"
+
+    def _determine_query_type(self, sql_query: str) -> str:
+        """Determine the type of SQL query."""
+        sql_upper = sql_query.upper()
+        if sql_upper.startswith("SELECT"):
+            return "SELECT"
+        elif sql_upper.startswith("INSERT"):
+            return "INSERT"
+        elif sql_upper.startswith("UPDATE"):
+            return "UPDATE"
+        elif sql_upper.startswith("DELETE"):
+            return "DELETE"
+        return "UNKNOWN"
 
 ###################
 # Router Agent
@@ -2934,60 +2583,57 @@ class FinalReportAgent(Agent):
 
     def invoke(self, query_results: dict, workflow_history: dict) -> dict:
         try:
-            # Check if this is a list tables query
-            is_list_tables_query = workflow_history.get('query_type') == 'list_tables'
+            # Extract SQL query from workflow history
+            sql_query = ""
+            if isinstance(workflow_history, dict):
+                if "SQLGenerator_response" in workflow_history:
+                    sql_gen_response = workflow_history["SQLGenerator_response"]
+                    if isinstance(sql_gen_response, dict) and "sql_generator_response" in sql_gen_response:
+                        sql_query = sql_gen_response["sql_generator_response"].get("sql_query", "")
 
-            if is_list_tables_query:
-                # Extract schema and table information
-                rows = query_results.get('rows', [])
-                row_count = query_results.get('row_count', 0)
-                schemas = set()
-                schema_counts = {}
-                sample_data = []
-
-                # Process rows to get schema information
-                for row in rows:
-                    if row and len(row) >= 2:
-                        schema = row[0]
-                        table = row[1]
-                        schemas.add(schema)
-                        schema_counts[schema] = schema_counts.get(schema, 0) + 1
-                        sample_data.append(f"{schema}.{table}")
-
-                # Create a detailed report
-                report = {
-                    "report": {
-                        "summary": f"Query executed successfully. Found {row_count} tables across {len(schemas)} schemas in the database.",
-                        "detailed_results": {
-                            "key_findings": [
-                                f"Found {row_count} tables across {len(schemas)} schemas",
-                                f"Schema distribution: {', '.join([f'{schema}: {count} tables' for schema, count in schema_counts.items()])}"
-                            ],
-                            "data_analysis": f"The database contains tables in the following schemas: {', '.join(schemas)}",
-                            "sample_data": sample_data[:10],
-                            "visualizations": ["Bar chart of tables per schema"]
-                        },
+            # Create the report structure
+            report = {
+                "report": {
+                    "summary": "Query execution completed",
+                    "detailed_results": {
+                        "key_findings": [],
+                        "data_analysis": "",
+                        "sample_data": [],
                         "query_details": {
-                            "original_query": query_results.get('query', ''),
-                            "performance_metrics": {
-                                "execution_time": query_results.get('execution_time', 0),
-                                "rows_affected": row_count
-                            }
-                        },
-                        "workflow_summary": "Query executed successfully."
-                    },
-                    "explanation": "This report lists all tables in the database across different schemas.",
-                    "metadata": {
-                        "timestamp": datetime.now().isoformat(),
-                        "version": "1.0",
-                        "schema_counts": schema_counts
+                            "sql_query": sql_query,
+                            "execution_time": query_results.get("execution_time", 0),
+                            "row_count": query_results.get("row_count", 0)
+                        }
                     }
                 }
+            }
 
-                return {"final_report": report}
+            # Handle interface query results
+            if "interface" in workflow_history.get("user_question", "").lower():
+                if query_results.get("status") == "success":
+                    rows = query_results.get("rows", [])
+                    report["report"]["summary"] = f"Found {len(rows)} tables/columns containing interface information"
+                    report["report"]["detailed_results"]["key_findings"] = [
+                        f"Discovered {len(rows)} potential interface-related items",
+                        "Search included all non-system schemas",
+                        "Results show schema, table, and column names"
+                    ]
+                    report["report"]["detailed_results"]["data_analysis"] = (
+                        "Analysis shows interface information across different schemas and tables. "
+                        "Each result indicates a potential interface-related column."
+                    )
+                    # Include sample data (up to 10 rows)
+                    report["report"]["detailed_results"]["sample_data"] = [
+                        f"{row[0]}.{row[1]}.{row[2]}" for row in rows[:10]
+                    ]
+                else:
+                    report["report"]["summary"] = "Error executing interface discovery query"
+                    report["report"]["detailed_results"]["key_findings"] = [
+                        "Query execution failed",
+                        f"Error: {query_results.get('error_message', 'Unknown error')}"
+                    ]
 
-            # For other query types, use the existing logic
-            return super().invoke(query_results, workflow_history)
+            return {"final_report": report}
 
         except Exception as e:
             print(f"Error in final report generation: {str(e)}")

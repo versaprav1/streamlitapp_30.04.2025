@@ -393,48 +393,6 @@ def sql_generator_node(state: AgentGraphState):
     print(f"Selector response received: {json.dumps(state.selector_response, indent=2) if hasattr(state, 'selector_response') else 'None'}")
 
     try:
-        # Check if this is a common query we can handle directly
-        if state.user_question.lower().strip() in ["list all tables", "show tables", "show all tables"]:
-            print("Detected 'list all tables' query, generating standard query WITHOUT using LLM")
-            print("This is a hardcoded response for a common query pattern")
-
-            # Use a standard query for listing tables - this will be executed against the actual database
-            # The execute_sql_query function will handle fallback to simulation if needed
-            standard_query = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_schema, table_name;"
-
-            sql_generator_response = {
-                "sql_query": standard_query,
-                "explanation": "This query lists all tables in the database by querying the information_schema.tables view, which contains metadata about all tables in the database. It filters for base tables only (excluding views) and orders the results by schema and table name for better readability.",
-                "validation_checks": [
-                    "Query targets information_schema which exists in all PostgreSQL databases",
-                    "Filtering on table_type ensures only actual tables are returned (not views)",
-                    "Results are ordered for better readability"
-                ],
-                "query_type": "SELECT",
-                "estimated_complexity": "LOW",
-                "required_indexes": []
-            }
-
-            result = {
-                "current_agent": "reviewer",
-                "execution_path": state.execution_path + ["SQLGenerator"],
-                "SQLGenerator_response": sql_generator_response,
-                "sql_query": standard_query,
-                "model": st.session_state.get("llm_model"),
-                "server": st.session_state.get("server"),
-                "temperature": st.session_state.get("temperature", 0),
-                "model_endpoint": st.session_state.get("server_endpoint")
-            }
-
-            print(f"SQL Generator node output for 'list all tables': current_agent={result['current_agent']}")
-            print(f"SQL query generated: {standard_query}")
-            print(f"SQL Generator response being sent to reviewer: {json.dumps(sql_generator_response, indent=2)}")
-            print("==== SQL GENERATOR NODE END ====\n")
-            return result
-
-        # For non-standard queries, use the LLM-based SQLGenerator
-        print(f"Non-standard query detected, using LLM-based SQLGenerator")
-
         # Create a new SQLGenerator with current settings
         generator = SQLGenerator(
             model=st.session_state.get("llm_model"),
@@ -444,96 +402,54 @@ def sql_generator_node(state: AgentGraphState):
         )
         print(f"Created SQLGenerator with model={st.session_state.get('llm_model')}, server={st.session_state.get('server')}")
 
-        # Use direct attribute access
+        # Get required inputs
         user_question = state.user_question
-        print(f"Invoking SQLGenerator with user_question: '{user_question}'")
+        planner_response = state.planner_response if hasattr(state, 'planner_response') else None
+        selector_response = state.selector_response if hasattr(state, 'selector_response') else None
 
-        # Invoke the generator
-        response = generator.invoke(user_question=user_question)
+        print(f"Invoking SQLGenerator with user_question: '{user_question}'")
+        response = generator.invoke(
+            user_question=user_question,
+            planner_response=planner_response,
+            selector_response=selector_response
+        )
         print(f"SQLGenerator returned response: {json.dumps(response, indent=2)}")
 
-        # Extract SQL query and ensure it's always set
+        # Extract SQL query from response
         sql_query = ""
-        if isinstance(response, dict):
-            # Try to get sql_query from sql_generator_response
-            if "sql_generator_response" in response:
-                sql_generator_response = response.get("sql_generator_response", {})
-                if isinstance(sql_generator_response, dict):
-                    sql_query = sql_generator_response.get("sql_query", "")
-                    print(f"Found sql_query in sql_generator_response: {sql_query}")
+        if isinstance(response, dict) and "sql_generator_response" in response:
+            sql_generator_response = response["sql_generator_response"]
+            if isinstance(sql_generator_response, dict):
+                sql_query = sql_generator_response.get("sql_query", "").strip()
 
-            # If not found, try to get sql_query directly
-            if not sql_query:
-                sql_query = response.get("sql_query", "")
-                if sql_query:
-                    print(f"Found sql_query directly in response: {sql_query}")
-
-            # If not found, try to get it from structured field
-            if not sql_query and "structured" in response:
-                structured = response.get("structured", {})
-                if isinstance(structured, dict):
-                    sql_query = structured.get("sql_query", "")
-                    if sql_query:
-                        print(f"Found sql_query in structured field: {sql_query}")
-
-            # If still not found, try to get it from raw field
-            if not sql_query and "raw" in response:
-                raw = response.get("raw", {})
-                if isinstance(raw, dict):
-                    sql_query = raw.get("sql_query", "")
-                    if sql_query:
-                        print(f"Found sql_query in raw field: {sql_query}")
-
-        # If sql_query is still empty, we need to retry with a more explicit prompt
+        # If sql_query is empty, this is an error condition
         if not sql_query:
-            print("SQL query was not generated. Retrying with more explicit instructions.")
-            # Get the user question
-            user_question = state.user_question
+            error_result = {
+                "current_agent": "router",
+                "errors": {"SQLGenerator": "Failed to generate SQL query"},
+                "execution_path": state.execution_path + ["SQLGenerator_error"],
+                "is_error_state": True,
+                "SQLGenerator_response": response,
+                "sql_query": "",
+                "model": st.session_state.get("llm_model"),
+                "server": st.session_state.get("server"),
+                "temperature": st.session_state.get("temperature", 0),
+                "model_endpoint": st.session_state.get("server_endpoint")
+            }
+            print(f"SQL Generator node error output: {json.dumps(error_result, indent=2)}")
+            print("==== SQL GENERATOR NODE END (WITH ERROR) ====\n")
+            return error_result
 
-            # Create a more explicit prompt for the SQL Generator
-            explicit_prompt = f"""
-            I need a SQL query to answer this question: "{user_question}"
-
-            If this is asking to list tables, use:
-            SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
-
-            If this is asking about specific table contents, use:
-            SELECT * FROM [table_name] LIMIT 10;
-
-            Please generate ONLY the SQL query without any explanation.
-            """
-            print(f"Retrying with explicit prompt: {explicit_prompt}")
-
-            # Try again with the explicit prompt
-            try:
-                explicit_response = generator.invoke(user_question=explicit_prompt)
-                print(f"Second attempt response: {json.dumps(explicit_response, indent=2)}")
-                if isinstance(explicit_response, dict):
-                    sql_query = explicit_response.get("sql_query", "")
-                    print(f"Second attempt generated SQL query: {sql_query}")
-            except Exception as e:
-                print(f"Error in second attempt to generate SQL query: {e}")
-                traceback.print_exc()
-
-            # If still empty, log the issue but don't use a default query
-            if not sql_query:
-                print("WARNING: Failed to generate SQL query after multiple attempts")
-
-        # Ensure sql_query exists in the response
-        if isinstance(response, dict):
-            response["sql_query"] = sql_query
-            print(f"Final SQL query set in response: {sql_query}")
-
-        # Create the result
+        # Create successful result
         result = {
             "current_agent": "reviewer",
             "execution_path": state.execution_path + ["SQLGenerator"],
             "SQLGenerator_response": response,
-            "sql_query": sql_query,  # Add sql_query to state explicitly
-            "model": st.session_state.get("llm_model"),  # Add model to state for final report
-            "server": st.session_state.get("server"),  # Add server to state for final report
-            "temperature": st.session_state.get("temperature", 0),  # Add temperature to state for final report
-            "model_endpoint": st.session_state.get("server_endpoint")  # Add model_endpoint to state for final report
+            "sql_query": sql_query,
+            "model": st.session_state.get("llm_model"),
+            "server": st.session_state.get("server"),
+            "temperature": st.session_state.get("temperature", 0),
+            "model_endpoint": st.session_state.get("server_endpoint")
         }
 
         print(f"SQL Generator node output: current_agent={result['current_agent']}")
@@ -541,24 +457,22 @@ def sql_generator_node(state: AgentGraphState):
         print(f"SQL Generator response being sent to reviewer: {json.dumps(response, indent=2)}")
         print("==== SQL GENERATOR NODE END ====\n")
         return result
+
     except Exception as e:
         print(f"Error in sql_generator_node: {e}")
         traceback.print_exc()
 
-        # Don't use a default query, report the error
-        print(f"Error in SQL Generator: {e}")
-
         error_result = {
-            "current_agent": "router",  # Go directly to router to handle the error
+            "current_agent": "router",
             "errors": {"SQLGenerator": str(e)},
             "execution_path": state.execution_path + ["SQLGenerator_error"],
-            "is_error_state": True,  # Mark as error state
-            "SQLGenerator_response": {"error": str(e), "sql_query": ""},
-            "sql_query": "",  # Don't set a default query
-            "model": st.session_state.get("llm_model"),  # Add model to state for final report
-            "server": st.session_state.get("server"),  # Add server to state for final report
-            "temperature": st.session_state.get("temperature", 0),  # Add temperature to state for final report
-            "model_endpoint": st.session_state.get("server_endpoint")  # Add model_endpoint to state for final report
+            "is_error_state": True,
+            "SQLGenerator_response": {"error": str(e)},
+            "sql_query": "",
+            "model": st.session_state.get("llm_model"),
+            "server": st.session_state.get("server"),
+            "temperature": st.session_state.get("temperature", 0),
+            "model_endpoint": st.session_state.get("server_endpoint")
         }
 
         print(f"SQL Generator node error output: {json.dumps(error_result, indent=2)}")
