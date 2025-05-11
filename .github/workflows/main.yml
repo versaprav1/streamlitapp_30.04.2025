@@ -21,4 +21,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://hugface4681:$HF_TOKEN@huggingface.co/spaces/hugface4681/txt-sql main
+        run: git push --force https://hugface4681:$HF_TOKEN@huggingface.co/spaces/hugface4681/txt-sql3 main
